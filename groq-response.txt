@@ -1,0 +1,76 @@
+{
+  "summary": "A structured roadmap guiding a frontend developer from foundational web technologies to advanced concepts, tools, and best practices for building modern, performant, and accessible web applications.",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "HTML Fundamentals",
+      "skill": "HTML",
+      "reason": "Establish the core structure of web pages and understand semantic markup for accessibility and SEO.",
+      "estimatedTime": "2 weeks",
+      "resources": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTML",
+        "https://www.w3schools.com/html/",
+        "https://frontendmasters.com/courses/html-css/"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "M2",
+      "title": "CSS Basics & Layout",
+      "skill": "CSS",
+      "reason": "Learn styling, layout techniques (Flexbox, Grid), and responsive design to create visually appealing interfaces.",
+      "estimatedTime": "3 weeks",
+      "resources": [
+        "https://developer.mozilla.org/en-US/docs/Web/CSS",
+        "https://css-tricks.com/snippets/css/a-guide-to-flexbox/",
+        "https://css-tricks.com/snippets/css/complete-guide-grid/"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "M3",
+      "title": "JavaScript Foundations",
+      "skill": "JavaScript",
+      "reason": "Gain proficiency in core language concepts, enabling dynamic behavior and interaction on web pages.",
+      "estimatedTime": "4 weeks",
+      "resources": [
+        "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+        "https://javascript.info/",
+        "https://frontendmasters.com/courses/javascript-basics/"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "M4",
+      "title": "DOM Manipulation & Events",
+      "skill": "JavaScript",
+      "reason": "Understand how to interact with the Document Object Model to create interactive UI components.",
+      "estimatedTime": "2 weeks",
+      "resources": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model",
+        "https://javascript.info/dom",
+        "https://frontendmasters.com/courses/dom/"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "M5",
+      "title": "Version Control with Git",
+      "skill": "Git",
+      "reason": "Track code changes, collaborate with teams, and manage project history effectively.",
+      "estimatedTime": "1 week",
+      "resources": [
+        "https://git-scm.com/book/en/v2",
+        "https://www.atlassian.com/git/tutorials",
+        "https://frontendmasters.com/courses/git/"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "M6",
+      "title": "Responsive Design & Mobile First",
+      "skill": "CSS",
+      "reason": "Create layouts that adapt to various screen sizes, ensuring a consistent experience across devices.",
+      "estimatedTime": "2 weeks",
+      "resources": [
+        "https://developer
