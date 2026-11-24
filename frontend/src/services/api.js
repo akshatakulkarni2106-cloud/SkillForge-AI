@@ -17,6 +17,12 @@ async function fetchWithRetry(url, options = {}, retries = 1, backoffMs = 300) {
   }
 }
 
+const rawBase = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+const getEndpoint = (path) => {
+  if (!rawBase) return '/api' + path;
+  return rawBase.endsWith('/api') ? `${rawBase}${path}` : `${rawBase}/api${path}`;
+};
+
 export async function api(path, { method = 'GET', body } = {}) {
   const token = localStorage.getItem('sf_token');
   const headers = {
@@ -24,7 +30,8 @@ export async function api(path, { method = 'GET', body } = {}) {
     ...(token && token.trim() ? { Authorization: `Bearer ${token.trim()}` } : {}),
   };
 
-  const res = await fetchWithRetry('/api' + path, {
+  const endpoint = getEndpoint(path);
+  const res = await fetchWithRetry(endpoint, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
@@ -32,7 +39,7 @@ export async function api(path, { method = 'GET', body } = {}) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    console.error(`[API ${res.status}] ${method} /api${path}:`, data.message || res.statusText);
+    console.error(`[API ${res.status}] ${method} ${endpoint}:`, data.message || res.statusText);
     const e = new Error(data.message || 'Something went wrong. Please try again.');
     e.status = res.status;
     e.data = data;
@@ -47,7 +54,8 @@ export async function upload(path, formData) {
     ...(token && token.trim() ? { Authorization: `Bearer ${token.trim()}` } : {}),
   };
 
-  const res = await fetchWithRetry('/api' + path, {
+  const endpoint = getEndpoint(path);
+  const res = await fetchWithRetry(endpoint, {
     method: 'POST',
     headers,
     body: formData,

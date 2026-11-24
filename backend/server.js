@@ -13,7 +13,32 @@ const assessmentLimiter = rateLimit({
   skip: () => !isProduction,
   message: { message: 'Too many assessment requests. Please try again later.' },
 });
-app.use(helmet(), cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }), express.json({ limit: '1mb' }), morgan('dev'));
+const allowedOrigins = process.env.CLIENT_ORIGIN
+  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
+  : ['http://localhost:5173'];
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin === 'http://localhost:5173' ||
+        !isProduction
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  }),
+  express.json({ limit: '10mb' }),
+  morgan('dev')
+);
 app.use('/api/auth', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: isProduction ? 50 : 200,
