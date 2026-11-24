@@ -8,6 +8,36 @@ export function AuthProvider({ children }) {
     api('/user/profile').then(setUser).catch(() => localStorage.removeItem('sf_token')).finally(() => setLoading(false)); }, []);
   const authenticate = async (path, body) => { const { token, user } = await api(path, { method: 'POST', body });
     localStorage.setItem('sf_token', token); setUser(user); };
-  const logout = () => { localStorage.removeItem('sf_token'); setUser(null); };
-  return <Ctx.Provider value={{ user, loading, login: (b) => authenticate('/auth/login', b), register: (b) => authenticate('/auth/register', b), logout }}>{children}</Ctx.Provider>;
+  const logout = () => {
+    localStorage.removeItem('sf_token');
+    setUser(null);
+  };
+  const updateUser = (updated) => setUser((prev) => (prev ? { ...prev, ...updated } : updated));
+  const refreshUser = async () => {
+    try {
+      const fresh = await api('/user/profile');
+      setUser(fresh);
+      return fresh;
+    } catch (err) {
+      // Ignore refresh error
+    }
+  };
+
+  return (
+    <Ctx.Provider
+      value={{
+        user,
+        setUser,
+        updateUser,
+        refreshUser,
+        loading,
+        login: (b) => authenticate('/auth/login', b),
+        register: (b) => authenticate('/auth/register', b),
+        logout,
+      }}
+    >
+      {children}
+    </Ctx.Provider>
+  );
 }
+

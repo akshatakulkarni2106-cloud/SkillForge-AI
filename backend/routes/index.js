@@ -7,6 +7,7 @@ const resume = require('../controllers/resumeController');
 const asmt = require('../controllers/assessmentController');
 const gap = require('../controllers/skillGapController');
 const project = require('../controllers/projectController');
+const interview = require('../controllers/interviewController');
 
 r.post('/auth/register', auth.register);
 r.post('/auth/login', auth.login);
@@ -23,9 +24,16 @@ r.post('/assessment/complete', protect, asmt.saveCompletedAssessment);
 r.get('/assessment/:id/result', protect, asmt.result);
 r.get('/assessments/:id', protect, asmt.getSession);
 r.post('/assessments/:id/evaluate', protect, asmt.evaluateRetry);
+r.get('/interview/summary', protect, interview.getSummary);
+r.post('/interview/start', protect, interview.startSession);
+r.post('/interview/:id/progress', protect, interview.updateProgress);
+r.post('/interview/:id/complete', protect, interview.completeSession);
+r.get('/interview/:id', protect, interview.getSession);
+r.delete('/interview/:id', protect, interview.abandonSession);
 r.get('/skill-gap/analyze', protect, gap.analyze);
 r.post('/project/save-analysis', protect, project.saveAnalysis);
 r.get('/project/latest', protect, project.getLatest);
 r.get('/project/list', protect, project.list);
 
 module.exports = r;
+

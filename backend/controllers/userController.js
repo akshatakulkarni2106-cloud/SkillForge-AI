@@ -1,10 +1,25 @@
 const { z } = require('zod');
 const editable = z.object({
-  name: z.string().min(2), college: z.string(), degree: z.string(), branch: z.string(), year: z.coerce.number().min(1).max(5),
-  targetRole: z.string(), githubUsername: z.string(), photoUrl: z.string().url(),
+  name: z.string().min(1),
+  college: z.string().optional().or(z.literal('')),
+  degree: z.string().optional().or(z.literal('')),
+  branch: z.string().optional().or(z.literal('')),
+  year: z.coerce.number().min(1).max(10).optional().nullable(),
+  targetRole: z.string().optional().or(z.literal('')),
+  githubUsername: z.string().optional().or(z.literal('')),
+  photoUrl: z.string().optional().or(z.literal('')),
 }).partial();
+
 exports.getProfile = (req, res) => res.json(req.user.toSafe());
+
 exports.updateProfile = async (req, res, next) => {
-  try { Object.assign(req.user, editable.parse(req.body)); await req.user.save(); res.json(req.user.toSafe()); }
-  catch (e) { next(e); }
+  try {
+    const validated = editable.parse(req.body);
+    Object.assign(req.user, validated);
+    await req.user.save();
+    res.json(req.user.toSafe());
+  } catch (e) {
+    next(e);
+  }
 };
+

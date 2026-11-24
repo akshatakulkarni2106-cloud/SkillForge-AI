@@ -14,6 +14,9 @@ import PracticePage from './pages/PracticePage';
 import RoadmapPage from './pages/RoadmapPage';
 import ProjectAnalyzer from './pages/ProjectAnalyzer';
 import LandingPage from './pages/LandingPage';
+import Profile from './pages/Profile';
+import Progress from './pages/Progress';
+import Settings from './pages/Settings';
 import { NAV } from './layouts/AppLayout';
 
 function Protected({ children }) {
@@ -33,8 +36,11 @@ export default function App() {
 
       <Route element={<Protected><AppLayout /></Protected>}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/progress" element={<Progress />} />
         <Route path="/resume" element={<Resume />} />
         <Route path="/skills" element={<SkillProfile />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/assessment" element={<Assessment />} />
         <Route path="/interview" element={<InterviewPage />} />
         <Route path="/practice" element={<PracticePage />} />
@@ -45,6 +51,7 @@ export default function App() {
           <Route key={n.to} path={n.to} element={<ComingSoon title={n.label} stage={n.stage} />} />
         ))}
       </Route>
+
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

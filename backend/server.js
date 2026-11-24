@@ -27,5 +27,10 @@ app.use('/api/assessments', assessmentLimiter);
 app.get('/api/health', (_, res) => res.json({ ok: true }));
 app.use('/api', require('./routes'));
 app.use(notFound, errorHandler);
-connectDB().then(() => app.listen(process.env.PORT || 5000, () => console.log('API on :' + (process.env.PORT || 5000))))
+connectDB().then(() => {
+  const port = process.env.PORT || 5000;
+  const server = app.listen(port, () => console.log('API on :' + port));
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
+})
   .catch((e) => { console.error('Could not connect to MongoDB:', e.message); process.exit(1); });

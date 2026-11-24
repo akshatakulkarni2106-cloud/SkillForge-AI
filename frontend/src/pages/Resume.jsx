@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { api, upload } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { analyzeResumeWithAi, tailorResumeToJob } from '../services/resumeService';
+import { progressService } from '../services/progressService';
 
 const getScoreGrade = (score) => {
   if (score >= 88) return { label: 'Top Tier (Interview Ready)', color: '#047857' };
@@ -12,10 +13,20 @@ const getScoreGrade = (score) => {
   return { label: 'Needs Optimization', color: '#e11d48' };
 };
 
+const QUICK_ROLES = [
+  'Full Stack Developer',
+  'MERN Stack Developer',
+  'Frontend Developer',
+  'Backend Developer',
+  'AI / Machine Learning Engineer',
+  'Data Analyst',
+  'DevOps & Cloud Engineer',
+];
+
 export default function Resume() {
   const { user } = useAuth();
   const [r, setR] = useState(null);
-  const [targetRole, setTargetRole] = useState('');
+  const [targetRole, setTargetRole] = useState('Full Stack Developer');
   const [busy, setBusy] = useState(false);
   const [analyzingAi, setAnalyzingAi] = useState(false);
   const [activeSectionTab, setActiveSectionTab] = useState('experience');
@@ -46,7 +57,8 @@ export default function Resume() {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+    if (busy || analyzingAi) return; // Prevent double-taps and concurrent requests
+    const file = e.target?.files?.[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
@@ -65,13 +77,14 @@ export default function Resume() {
 
       // Immediately run real AI critique on the extracted text
       if (uploadedDoc?.extractedText) {
-        await runAiCritique(uploadedDoc.extractedText, targetRole || user?.targetRole || 'Software Engineer');
+        await runAiCritique(uploadedDoc.extractedText, targetRole || user?.targetRole || 'Full Stack Developer');
       }
     } catch (err) {
-      toast.error(err.message || 'Failed to upload resume.');
+      console.error('Resume upload error:', err);
+      toast.error(err.message || 'Failed to upload resume. Please check your connection and try again.');
     } finally {
       setBusy(false);
-      e.target.value = '';
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -83,7 +96,7 @@ export default function Resume() {
     }
 
     setAnalyzingAi(true);
-    const resolvedRole = roleToUse || targetRole || user?.targetRole || 'Software Engineer';
+    const resolvedRole = roleToUse || targetRole || user?.targetRole || 'Full Stack Developer';
 
     try {
       const critiqueData = await analyzeResumeWithAi(resumeText, resolvedRole);
@@ -95,7 +108,13 @@ export default function Resume() {
       });
 
       setR(updated);
-      toast.success('Live AI critique completed and saved!');
+      progressService.addActivity({
+        type: 'resume',
+        title: `${resolvedRole} Resume ATS Evaluation`,
+        score: critiqueData?.overallScore,
+        durationMinutes: 10,
+      });
+      toast.success(`Evaluated for ${resolvedRole}! Overall score: ${critiqueData.overallScore}/100`);
     } catch (err) {
       console.error(err);
       toast.error(err.message || 'AI critique encountered an issue.');
@@ -120,7 +139,7 @@ export default function Resume() {
       const result = await tailorResumeToJob(
         r.extractedText,
         jobDescription,
-        targetRole || user?.targetRole || 'Software Engineer'
+        targetRole || user?.targetRole || 'Full Stack Developer'
       );
       setTailorResult(result);
       toast.success('Resume tailored to Job Description!');
@@ -141,53 +160,104 @@ export default function Resume() {
 
   const critique = r?.critique;
   const grade = critique?.overallScore ? getScoreGrade(critique.overallScore) : null;
+  const isRoleOutOfSync = r?.targetRole && targetRole && r.targetRole.trim().toLowerCase() !== targetRole.trim().toLowerCase();
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto' }}>
       <header style={{ marginBottom: 24 }}>
         <h1>Resume Analyzer & ATS Optimizer</h1>
         <p className="muted" style={{ marginTop: 6, fontSize: '.95rem' }}>
-          Real AI evaluation reasoning over your actual resume content. Zero hardcoded scores or boilerplate advice.
+          Dynamic AI evaluation calibrated to your specific target role. Scores reflect real tech stack alignment, impact metrics, and project depth.
         </p>
       </header>
 
       {/* Upload and Target Role configuration */}
       <section className="card" style={{ padding: '22px 26px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 8, margin: 0 }}>
-              <span style={{ fontSize: '.88rem', color: 'var(--mut)' }}>Target Role:</span>
-              <input
-                type="text"
-                value={targetRole}
-                placeholder="e.g. Senior Full Stack Engineer"
-                onChange={(e) => setTargetRole(e.target.value)}
-                style={{ padding: '8px 12px', minWidth: 260 }}
-              />
-            </label>
-            {r && (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => runAiCritique(r.extractedText, targetRole)}
-                disabled={analyzingAi || busy}
-                style={{ borderColor: 'var(--pri)', color: 'var(--pri)' }}
-              >
-                {analyzingAi ? 'Critiquing with AI…' : '🔄 Refresh AI Critique'}
-              </button>
-            )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+              <label style={{ display: 'inline-flex', flexDirection: 'row', alignItems: 'center', gap: 8, margin: 0 }}>
+                <span style={{ fontSize: '.88rem', fontWeight: 600, color: 'var(--ink)' }}>Target Role:</span>
+                <input
+                  type="text"
+                  value={targetRole}
+                  placeholder="e.g. MERN Stack Developer"
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  style={{ padding: '8px 12px', minWidth: 240 }}
+                />
+              </label>
+
+              {r && (
+                <button
+                  type="button"
+                  className={isRoleOutOfSync ? 'primary' : 'btn'}
+                  onClick={() => runAiCritique(r.extractedText, targetRole)}
+                  disabled={analyzingAi || busy}
+                  style={isRoleOutOfSync ? { width: 'auto', padding: '8px 16px' } : { borderColor: 'var(--pri)', color: 'var(--pri)' }}
+                >
+                  {analyzingAi ? 'Critiquing with AI…' : `⚡ Evaluate for ${targetRole || 'Target Role'}`}
+                </button>
+              )}
+            </div>
+
+            {/* Quick role selection chips */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+              <span style={{ fontSize: '.78rem', color: 'var(--mut)', fontWeight: 600 }}>Quick select:</span>
+              {QUICK_ROLES.map((role) => {
+                const isSelected = targetRole.trim().toLowerCase() === role.toLowerCase();
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => {
+                      setTargetRole(role);
+                      if (r?.extractedText) {
+                        runAiCritique(r.extractedText, role);
+                      }
+                    }}
+                    style={{
+                      background: isSelected ? 'var(--pri)' : '#fdf2f8',
+                      color: isSelected ? '#fff' : 'var(--pri)',
+                      border: '1px solid',
+                      borderColor: isSelected ? 'var(--pri)' : 'var(--line-strong)',
+                      padding: '3px 9px',
+                      borderRadius: 14,
+                      fontSize: '.78rem',
+                      cursor: 'pointer',
+                      fontWeight: isSelected ? 700 : 500,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {r?.fileName && (
-            <div style={{ fontSize: '.85rem', color: 'var(--mut)' }}>
-              Current: <strong style={{ color: 'var(--ink)' }}>{r.fileName}</strong>
+            <div style={{ fontSize: '.85rem', color: 'var(--mut)', textAlign: 'right' }}>
+              <div>Current file: <strong style={{ color: 'var(--ink)' }}>{r.fileName}</strong></div>
+              {r.targetRole && (
+                <div style={{ fontSize: '.78rem', marginTop: 4 }}>
+                  Last evaluated for: <span style={{ color: 'var(--pri)', fontWeight: 600 }}>{r.targetRole}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <label className="drop">
+        <label
+          className="drop"
+          style={{
+            marginTop: 16,
+            opacity: busy || analyzingAi ? 0.65 : 1,
+            cursor: busy || analyzingAi ? 'not-allowed' : 'pointer',
+            pointerEvents: busy || analyzingAi ? 'none' : 'auto',
+          }}
+        >
           {busy
-            ? 'Extracting text and preparing resume…'
+            ? 'Uploading & extracting text from resume…'
             : r
             ? 'Click or drop a newer resume (PDF or DOCX, max 5 MB)'
             : 'Upload your resume (PDF or DOCX, max 5 MB) for live AI critique'}
@@ -222,10 +292,15 @@ export default function Resume() {
               )}
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                 <span className="tag pink" style={{ background: 'rgba(251, 113, 133, 0.2)', color: '#fecdd3', borderColor: 'rgba(251, 113, 133, 0.4)' }}>
-                  Evaluated for: {r?.targetRole || targetRole || 'Software Engineer'}
+                  Evaluated for: {r?.targetRole || targetRole || 'Full Stack Developer'}
                 </span>
+                {isRoleOutOfSync && (
+                  <span style={{ fontSize: '.8rem', color: '#fed7aa', fontWeight: 600 }}>
+                    ⚠️ Re-evaluate above for "{targetRole}"
+                  </span>
+                )}
               </div>
               <h2 style={{ color: '#fff', fontSize: '1.3rem', marginBottom: 10 }}>Executive Assessment</h2>
               <p style={{ color: '#fce7f1', fontSize: '.96rem', lineHeight: 1.6, margin: 0 }}>

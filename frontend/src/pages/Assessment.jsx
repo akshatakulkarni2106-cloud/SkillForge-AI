@@ -13,6 +13,7 @@ import {
   BADGES_CATALOG,
 } from '../services/assessmentService';
 import { moveDifficulty, normalizeDifficulty } from '../utils/difficultyUtils';
+import { progressService } from '../services/progressService';
 
 export default function Assessment() {
   // Setup & Metadata state
@@ -342,6 +343,19 @@ export default function Assessment() {
         xpEarned: sessionXp,
         maxStreak,
         questions: finalQuestions,
+      });
+
+      // Log progress activity for tracking, streaks & milestones
+      progressService.addActivity({
+        type: 'assessment',
+        title: `${form.skill} Skill Assessment`,
+        score: finalOverallScore,
+        durationMinutes: Math.max(form.count * 3, 10),
+        details: {
+          skill: form.skill,
+          questionsCount: finalQuestions.length,
+          xpEarned: sessionXp,
+        },
       });
 
       // 3. Feed results into backend data store for Skill Gap, Skill Profile & Dashboard

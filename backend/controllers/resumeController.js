@@ -26,6 +26,7 @@ exports.analyze = async (req, res, next) => {
       extractedText: text,
     });
     // New skills join the profile unverified at 0% until assessed; existing scores are untouched.
+    if (!Array.isArray(req.user.skills)) req.user.skills = [];
     const have = new Set(req.user.skills.map((s) => s.name));
     skills.filter((s) => !have.has(s)).forEach((name) => req.user.skills.push({ name, score: 0 }));
     await req.user.save();

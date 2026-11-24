@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import InterviewerAvatar, { generateRandomAvatarConfig } from '../components/InterviewerAvatar';
 import { api } from '../services/api';
 import {
@@ -9,6 +9,7 @@ import {
   startInterview,
 } from '../services/interviewService';
 import { moveDifficulty, normalizeDifficulty, experienceLevelToDifficulty } from '../utils/difficultyUtils';
+import { progressService } from '../services/progressService';
 
 const PRESET_ROLES = [
   'Full Stack Developer',
@@ -40,6 +41,17 @@ const formatTimeMMSS = (totalSeconds) => {
 };
 
 export default function InterviewPage() {
+  const [searchParams] = useSearchParams();
+
+  // Interview History & Stats State
+  const [summaryData, setSummaryData] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState('');
+  const [isReviewingPast, setIsReviewingPast] = useState(false);
+
+  // Active Session Persistence State
+  const [sessionId, setSessionId] = useState(null);
+
   // Session Configuration State
   const [selectedRole, setSelectedRole] = useState('Full Stack Developer');
   const [customRoleInput, setCustomRoleInput] = useState('');
@@ -81,6 +93,25 @@ export default function InterviewPage() {
   // Final Results
   const [finalResults, setFinalResults] = useState(null);
 
+  // Load Real Interview Stats & History
+  const loadInterviewSummary = () => {
+    setSummaryLoading(true);
+    setSummaryError('');
+    api('/interview/summary')
+      .then((data) => {
+        setSummaryData(data);
+        setSummaryLoading(false);
+      })
+      .catch((err) => {
+        setSummaryError(err.message || 'Failed to load interview history and statistics.');
+        setSummaryLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    loadInterviewSummary();
+  }, []);
+
   // Fetch Resume suggestion on mount
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +120,6 @@ export default function InterviewPage() {
         if (cancelled || !data) return;
         const skills = Array.isArray(data.extractedSkills) ? data.extractedSkills.filter(Boolean) : [];
         if (skills.length > 0) {
-          // Infer suggested role from extracted skills
           const lower = skills.map((s) => s.toLowerCase());
           let suggested = 'Full Stack Developer';
           if (lower.some((s) => s.includes('react') || s.includes('css') || s.includes('frontend'))) {
@@ -114,6 +144,131 @@ export default function InterviewPage() {
       cancelled = true;
     };
   }, []);
+
+  // Resume In-Progress Interview Session
+  const resumeSessionById = async (id) => {
+    try {
+      setIsEvaluating(true);
+      setError('');
+      const session = await api(`/interview/${id}`);
+      if (!session) throw new Error('Session not found');
+
+      setSessionId(session._id);
+      setSelectedRole(session.role);
+      setExperienceLevel(session.experienceLevel || 'mid');
+      setTimeLimitMinutes(session.timeLimitMinutes || 0);
+      setCurrentDifficulty(session.currentDifficulty || 'medium');
+      setSessionSeconds(session.sessionSeconds || 0);
+
+      const pastTranscript = session.transcript || [];
+      setTranscript(pastTranscript);
+
+      // Reconstruct messages for the conversation UI
+      const rebuiltMessages = [];
+      pastTranscript.forEach((entry, idx) => {
+        rebuiltMessages.push({
+          id: `q-${idx + 1}`,
+          sender: 'ai',
+          type: 'question',
+          text: entry.question,
+          difficulty: entry.difficulty || 'medium',
+          timestamp: Date.now() - (pastTranscript.length - idx) * 60000,
+        });
+        if (entry.answer) {
+          rebuiltMessages.push({
+            id: `ans-${idx + 1}`,
+            sender: 'candidate',
+            type: 'answer',
+            text: entry.answer,
+            responseTimeSeconds: entry.responseTimeSeconds,
+            timestamp: Date.now() - (pastTranscript.length - idx) * 60000 + 30000,
+          });
+        }
+        if (entry.detailedFeedback) {
+          rebuiltMessages.push({
+            id: `fb-${idx + 1}`,
+            sender: 'ai',
+            type: 'feedback',
+            verdict: entry.verdict,
+            score: entry.score,
+            text: entry.detailedFeedback,
+            spokenText: entry.spokenFeedback,
+            timestamp: Date.now() - (pastTranscript.length - idx) * 60000 + 35000,
+          });
+        }
+      });
+
+      const activeQ = session.currentQuestion || (pastTranscript.length > 0 ? `Follow-up question on ${session.role}` : '');
+      if (activeQ) {
+        setCurrentQuestion(activeQ);
+        rebuiltMessages.push({
+          id: `q-${pastTranscript.length + 1}`,
+          sender: 'ai',
+          type: 'question',
+          text: activeQ,
+          difficulty: session.currentDifficulty || 'medium',
+          timestamp: Date.now(),
+        });
+        speakText(activeQ);
+      }
+
+      setMessages(rebuiltMessages);
+      setIsInterviewStarted(true);
+      setIsInterviewOver(false);
+    } catch (err) {
+      setError(err.message || 'Could not resume interview session.');
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  // Check URL query parameter for resume
+  useEffect(() => {
+    const urlSession = searchParams.get('session');
+    if (urlSession && !isInterviewStarted && !isInterviewOver) {
+      resumeSessionById(urlSession);
+    }
+  }, [searchParams]);
+
+  // Discard In-Progress Session
+  const handleDiscardSession = async (id, e) => {
+    if (e) e.stopPropagation();
+    try {
+      await api(`/interview/${id}`, { method: 'DELETE' });
+      loadInterviewSummary();
+    } catch (err) {
+      setError('Failed to discard interview session.');
+    }
+  };
+
+  // Review Past Completed Session Debrief
+  const handleReviewPastSession = async (item) => {
+    try {
+      setIsEvaluating(true);
+      setError('');
+      const session = await api(`/interview/${item.id}`);
+      setFinalResults({
+        overallScore: session.overallScore || item.overallScore,
+        categoryScores: session.categoryScores || {},
+        verdict: session.verdict || item.verdict,
+        strengths: session.strengths || [],
+        weaknesses: session.weaknesses || [],
+        suggestions: session.suggestions || [],
+        pacingFeedback: session.pacingFeedback || '',
+        transcript: session.transcript || [],
+        role: session.role || item.role,
+        experienceLevel: session.experienceLevel || item.experienceLevel,
+      });
+      setSessionSeconds(session.sessionSeconds || item.durationSeconds || 0);
+      setIsReviewingPast(true);
+      setIsInterviewOver(true);
+      setIsInterviewStarted(false);
+    } catch (err) {
+      setError('Could not load past debrief report.');
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
 
   // Initialize SpeechRecognition
   useEffect(() => {
@@ -175,7 +330,6 @@ export default function InterviewPage() {
     sessionTimerRef.current = setInterval(() => {
       setSessionSeconds((prev) => {
         const next = prev + 1;
-        // Check time limit
         if (timeLimitMinutes > 0 && next >= timeLimitMinutes * 60) {
           clearInterval(sessionTimerRef.current);
           handleTriggerEndInterview(true);
@@ -253,6 +407,25 @@ export default function InterviewPage() {
       setCurrentQuestion(questionText);
       questionStartTimeRef.current = Date.now();
 
+      // Persist new interview session in MongoDB
+      try {
+        const startRes = await api('/interview/start', {
+          method: 'POST',
+          body: {
+            role: effectiveRole,
+            experienceLevel,
+            timeLimitMinutes,
+            firstQuestion: questionText,
+            currentDifficulty: initialDiff,
+          },
+        });
+        if (startRes?.session?._id) {
+          setSessionId(startRes.session._id);
+        }
+      } catch (e) {
+        // Continue even if database sync encounters a transient network issue
+      }
+
       setMessages([
         {
           id: 'q-1',
@@ -279,13 +452,11 @@ export default function InterviewPage() {
       return;
     }
 
-    // Stop listening if mic is active
     if (isListening && recognitionRef.current) {
       recognitionRef.current.stop();
       setIsListening(false);
     }
 
-    // Stop speaking current question
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsAvatarSpeaking(false);
@@ -311,7 +482,6 @@ export default function InterviewPage() {
     setIsEvaluating(true);
 
     try {
-      // 1. Live per-question evaluation via Groq
       const evalResult = await evaluateQuestionAnswer({
         role: effectiveRole,
         experienceLevel,
@@ -322,7 +492,6 @@ export default function InterviewPage() {
         responseTimeSeconds: elapsedSeconds,
       });
 
-      // Update transcript with full data
       const updatedTranscriptEntry = {
         question: currentQuestion,
         answer,
@@ -331,18 +500,15 @@ export default function InterviewPage() {
         score: evalResult.score,
         spokenFeedback: evalResult.spokenFeedback,
         detailedFeedback: evalResult.detailedFeedback,
+        difficulty: currentDifficulty,
       };
 
       const nextTranscript = [...transcript, updatedTranscriptEntry];
       setTranscript(nextTranscript);
 
-      // Trigger avatar reaction based on real verdict
       triggerExpressionShift(evalResult.verdict === 'strong' ? 'positive' : 'thoughtful');
-
-      // Speak feedback aloud
       speakText(evalResult.spokenFeedback);
 
-      // Add feedback card to chat
       const feedbackMessage = {
         id: `fb-${Date.now()}`,
         sender: 'ai',
@@ -355,11 +521,9 @@ export default function InterviewPage() {
       };
       setMessages((prev) => [...prev, feedbackMessage]);
 
-      // 2. Adjust adaptive difficulty
       const nextDiff = moveDifficulty(currentDifficulty, evalResult.suggestedNextDifficulty);
       setCurrentDifficulty(nextDiff);
 
-      // 3. Generate next adaptive question
       const nextQResponse = await getNextAdaptiveQuestion({
         role: effectiveRole,
         experienceLevel,
@@ -372,7 +536,19 @@ export default function InterviewPage() {
       setCurrentQuestion(nextQuestionText);
       questionStartTimeRef.current = Date.now();
 
-      // Add next question to messages
+      // Persist in-progress state to backend MongoDB
+      if (sessionId) {
+        api(`/interview/${sessionId}/progress`, {
+          method: 'POST',
+          body: {
+            transcript: nextTranscript,
+            currentQuestion: nextQuestionText,
+            currentDifficulty: nextDiff,
+            sessionSeconds,
+          },
+        }).catch(() => {});
+      }
+
       const nextQMessage = {
         id: `q-${nextTranscript.length + 1}`,
         sender: 'ai',
@@ -384,7 +560,6 @@ export default function InterviewPage() {
 
       setMessages((prev) => [...prev, nextQMessage]);
 
-      // Speak next question after brief interval
       setTimeout(() => {
         speakText(nextQuestionText);
       }, 1500);
@@ -409,7 +584,6 @@ export default function InterviewPage() {
     setIsEndingSession(true);
     setError('');
 
-    // If there's an in-progress answer not yet evaluated, record it
     let finalTranscript = [...transcript];
     if (currentAnswer.trim() && currentQuestion) {
       const elapsed = questionStartTimeRef.current
@@ -430,6 +604,43 @@ export default function InterviewPage() {
         totalDurationSeconds: sessionSeconds,
       });
 
+      // Save complete session in backend MongoDB & create Activity record
+      const activeSessionId = sessionId || 'new';
+      try {
+        await api(`/interview/${activeSessionId}/complete`, {
+          method: 'POST',
+          body: {
+            overallScore: evaluation.overallScore,
+            categoryScores: evaluation.categoryScores,
+            verdict: evaluation.verdict,
+            strengths: evaluation.strengths,
+            weaknesses: evaluation.weaknesses,
+            suggestions: evaluation.suggestions,
+            pacingFeedback: evaluation.pacingFeedback,
+            transcript: finalTranscript,
+            sessionSeconds,
+            role: effectiveRole,
+            experienceLevel,
+          },
+        });
+        loadInterviewSummary();
+
+        // Track completed mock interview in progress dashboard
+        progressService.addActivity({
+          type: 'interview',
+          title: `Mock Interview: ${effectiveRole}`,
+          score: evaluation.overallScore,
+          durationMinutes: Math.max(Math.round(sessionSeconds / 60), 5),
+          details: {
+            role: effectiveRole,
+            verdict: evaluation.verdict,
+            questionsAnswered: finalTranscript.filter((t) => t.type === 'user').length,
+          },
+        });
+      } catch (err) {
+        // Non-blocking error
+      }
+
       setFinalResults({
         ...evaluation,
         wasAutoEnded: isAutoTimeLimit,
@@ -443,7 +654,6 @@ export default function InterviewPage() {
     }
   };
 
-  // Toggle voice recognition
   const toggleListening = () => {
     if (!recognitionRef.current) {
       setError('Voice recognition is not supported in this browser.');
@@ -464,17 +674,17 @@ export default function InterviewPage() {
     }
   };
 
-  // Repeat current question
   const handleRepeatQuestion = () => {
     if (currentQuestion) {
       speakText(currentQuestion);
     }
   };
 
-  // Restart new interview
   const handleResetSession = () => {
     setIsInterviewStarted(false);
     setIsInterviewOver(false);
+    setIsReviewingPast(false);
+    setSessionId(null);
     setFinalResults(null);
     setMessages([]);
     setTranscript([]);
@@ -483,160 +693,411 @@ export default function InterviewPage() {
     setSessionSeconds(0);
     setError('');
     setAvatarConfig(generateRandomAvatarConfig());
+    loadInterviewSummary();
   };
 
   // ==========================================
-  // VIEW 1: Tech Stack & Role Selection Screen
+  // VIEW 1: Interview Dashboard & Setup Screen
   // ==========================================
   if (!isInterviewStarted && !isInterviewOver) {
+    const stats = summaryData?.stats || {
+      totalInterviews: 0,
+      averageScore: null,
+      lastScore: null,
+      categoryAverages: null,
+    };
+    const inProgressList = Array.isArray(summaryData?.inProgress) ? summaryData.inProgress : [];
+    const recentInterviewsList = Array.isArray(summaryData?.recentInterviews) ? summaryData.recentInterviews : [];
+
     return (
-      <section className="card" style={{ maxWidth: 960, margin: '24px auto', padding: '28px' }}>
+      <div style={{ maxWidth: 1040, margin: '20px auto', padding: '0 16px' }}>
+        {/* Page Title */}
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ margin: 0, fontSize: '1.8rem' }}>AI Mock Interview</h1>
           <p className="muted" style={{ margin: '8px 0 0', lineHeight: 1.5 }}>
-            Prepare for real-world technical interviews. Select your target role and seniority to begin an interactive,
-            speech-enabled session evaluated live by Groq.
+            Prepare for technical interviews with adaptive, speech-enabled simulations and detailed committee evaluations.
           </p>
         </div>
 
-        {/* Resume Suggestion Callout Banner */}
-        {resumeSuggestion && (
-          <div
-            className="card"
-            style={{
-              background: '#f0fdfa',
-              border: '1px solid #99f6e4',
-              padding: '14px 18px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 12,
-              marginBottom: 20,
-            }}
-          >
-            <div>
-              <strong style={{ color: 'var(--pri)' }}>Resume Signal Detected</strong>
-              <p className="muted small" style={{ margin: '4px 0 0' }}>
-                Your uploaded resume emphasizes <b>{resumeSuggestion.topSkills.join(', ')}</b>. We recommend targeting{' '}
-                <b>{resumeSuggestion.role}</b>.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="ghost"
-              onClick={() => {
-                setSelectedRole(resumeSuggestion.role);
-              }}
-              style={{
-                borderColor: 'var(--pri)',
-                color: 'var(--pri)',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-              }}
-            >
-              Use Suggested Role
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <div className="card" style={{ borderColor: 'var(--warm)', background: '#fff4f0', marginBottom: 20 }}>
-            <strong style={{ color: 'var(--warm)' }}>Error</strong>
-            <p style={{ margin: '6px 0 0' }}>{error}</p>
-          </div>
-        )}
-
-        <div className="grid2" style={{ gap: 20 }}>
-          {/* Role Selection */}
-          <div className="card" style={{ margin: 0, padding: '18px' }}>
-            <label htmlFor="role-select" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
-              Target Role / Tech Stack
-            </label>
-            <select
-              id="role-select"
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 8 }}
-            >
-              {PRESET_ROLES.map((role) => (
-                <option key={role} value={role}>{role}</option>
+        {/* Loading State for Interview Data */}
+        {summaryLoading && !summaryData && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 20 }}>
+            <div className="skeleton-grid">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton" style={{ height: 80 }} />
               ))}
-            </select>
+            </div>
+          </div>
+        )}
 
-            {selectedRole === 'Custom Role' && (
-              <div style={{ marginTop: 12 }}>
-                <label htmlFor="custom-role" style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 4 }}>
-                  Specify Your Custom Role or Focus
-                </label>
-                <input
-                  id="custom-role"
-                  type="text"
-                  placeholder="e.g. Distributed Systems Engineer, Golang Microservices"
-                  value={customRoleInput}
-                  onChange={(e) => setCustomRoleInput(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+        {/* Error Handling for Interview Data */}
+        {summaryError && (
+          <div className="card" style={{ background: '#fef2f2', borderColor: '#fca5a5', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <strong style={{ color: '#991b1b' }}>Could not sync interview history</strong>
+                <p className="muted small" style={{ margin: '4px 0 0' }}>{summaryError}</p>
+              </div>
+              <button type="button" className="ghost" onClick={loadInterviewSummary} style={{ fontSize: '0.85rem' }}>
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Real Interview-Specific Stat Cards */}
+        {!summaryLoading && summaryData && (
+          <>
+            <section className="cards" style={{ marginBottom: 20 }}>
+              <div className="card stat">
+                <small>Total Interviews Taken</small>
+                <b>{stats.totalInterviews}</b>
+                <span className="muted small">All recorded sessions</span>
+              </div>
+
+              <div className="card stat">
+                <small>Average Interview Score</small>
+                <b>{stats.averageScore !== null ? `${stats.averageScore}%` : '—'}</b>
+                <span className="muted small">
+                  {stats.averageScore !== null ? 'Cumulative quality' : 'Take first interview'}
+                </span>
+              </div>
+
+              <div className="card stat">
+                <small>Latest Session Score</small>
+                <b>{stats.lastScore !== null ? `${stats.lastScore}%` : '—'}</b>
+                <span className="muted small">
+                  {stats.lastScore !== null ? 'Most recent performance' : 'No sessions yet'}
+                </span>
+              </div>
+
+              <div className="card stat">
+                <small>Interview Readiness</small>
+                <b>
+                  {stats.averageScore !== null
+                    ? stats.averageScore >= 80
+                      ? 'Ready'
+                      : stats.averageScore >= 65
+                        ? 'Solid'
+                        : 'Developing'
+                    : 'Unrated'}
+                </b>
+                <span className="muted small">
+                  {stats.averageScore !== null
+                    ? `${stats.averageScore >= 75 ? 'Hiring candidate' : 'Practice recommended'}`
+                    : 'Complete an interview'}
+                </span>
+              </div>
+            </section>
+
+            {/* Category Performance Breakdown */}
+            {stats.categoryAverages && (
+              <div className="card" style={{ marginBottom: 20, padding: '20px' }}>
+                <h3 style={{ margin: '0 0 14px', fontSize: '1.05rem' }}>Interview Competency Averages</h3>
+                <div className="grid2" style={{ gap: 14 }}>
+                  {Object.entries(stats.categoryAverages).map(([cat, score]) => {
+                    const label = cat.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+                    const scoreVal = score !== null ? score : 0;
+                    return (
+                      <div key={cat} style={{ background: 'var(--pri-subtle)', border: '1px solid var(--line)', padding: '12px 14px', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--ink)' }}>{label}</span>
+                          <b style={{ color: 'var(--ink)' }}>{score !== null ? `${score}%` : '—'}</b>
+                        </div>
+                        <div className="bar" style={{ height: 6, margin: 0 }}>
+                          <i style={{ width: `${Math.min(100, Math.max(0, scoreVal))}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
+
+            {/* In-Progress Interviews Section */}
+            {inProgressList.length > 0 && (
+              <div
+                className="card"
+                style={{
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  padding: '18px 20px',
+                  marginBottom: 20,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: '1.2rem' }}>⏳</span>
+                    <strong style={{ color: '#d97706', fontSize: '1.05rem' }}>Unfinished Interview In Progress</strong>
+                  </div>
+                  <span className="tag mid" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#d97706' }}>
+                    {inProgressList.length} In Progress
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {inProgressList.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 8,
+                        padding: '12px 16px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <strong>{item.role}</strong>{' '}
+                        <span className="muted small">({item.experienceLevel} level · {item.questionCount} questions answered)</span>
+                        {item.currentQuestion && (
+                          <p className="muted small" style={{ margin: '4px 0 0', fontStyle: 'italic' }}>
+                            Current question: "{item.currentQuestion.slice(0, 90)}…"
+                          </p>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={(e) => handleDiscardSession(item.id, e)}
+                          style={{ fontSize: '0.82rem', padding: '6px 12px', color: '#991b1b' }}
+                        >
+                          Discard
+                        </button>
+                        <button
+                          type="button"
+                          className="primary"
+                          onClick={() => resumeSessionById(item.id)}
+                          style={{ fontSize: '0.85rem', padding: '7px 16px', width: 'auto' }}
+                        >
+                          Resume Interview →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Interview History */}
+            <div className="card" style={{ marginBottom: 24, padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Past Interview History</h3>
+                <span className="muted small">{recentInterviewsList.length} recorded</span>
+              </div>
+
+              {recentInterviewsList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '24px 16px', background: 'var(--pri-subtle)', border: '1px dashed var(--line)', borderRadius: 8 }}>
+                  <p className="muted small" style={{ margin: 0, color: 'var(--mut)' }}>
+                    No completed interviews yet. Configure your interview parameters below to begin your first session!
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {recentInterviewsList.map((item) => (
+                    <div
+                      key={item.id}
+                      style={{
+                        padding: '12px 16px',
+                        border: '1px solid var(--line)',
+                        borderRadius: 8,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: 12,
+                        background: 'var(--card)',
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <strong>{item.role}</strong>
+                          <span className="tag mid" style={{ textTransform: 'capitalize', fontSize: '0.72rem' }}>
+                            {item.experienceLevel || 'mid'}
+                          </span>
+                          <span
+                            className="tag ok"
+                            style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              background: item.overallScore >= 75 ? '#ecfdf5' : '#fffbeb',
+                              color: item.overallScore >= 75 ? '#047857' : '#b45309',
+                            }}
+                          >
+                            {item.overallScore}% score
+                          </span>
+                        </div>
+                        <p className="muted small" style={{ margin: 0 }}>
+                          {item.verdict ? `${item.verdict.slice(0, 100)}…` : 'Completed technical session'}
+                          {item.createdAt && ` · ${new Date(item.createdAt).toLocaleDateString()}`}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => handleReviewPastSession(item)}
+                        style={{ fontSize: '0.82rem', padding: '6px 14px' }}
+                      >
+                        Review Debrief →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Start New Interview Configuration Section */}
+        <section className="card" style={{ padding: '26px' }}>
+          <h2 style={{ margin: '0 0 16px', fontSize: '1.3rem' }}>Start New Interview Simulation</h2>
+
+          {/* Resume Suggestion Callout Banner */}
+          {resumeSuggestion && (
+            <div
+              className="card"
+              style={{
+                background: 'var(--pri-subtle)',
+                border: '1px solid var(--line-strong)',
+                padding: '14px 18px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 12,
+                marginBottom: 20,
+              }}
+            >
+              <div>
+                <strong style={{ color: 'var(--pri)' }}>Resume Signal Detected</strong>
+                <p className="muted small" style={{ margin: '4px 0 0', color: 'var(--mut)' }}>
+                  Your uploaded resume emphasizes <b>{resumeSuggestion.topSkills.join(', ')}</b>. We recommend targeting{' '}
+                  <b>{resumeSuggestion.role}</b>.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  setSelectedRole(resumeSuggestion.role);
+                }}
+                style={{
+                  borderColor: 'var(--pri)',
+                  color: 'var(--pri)',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                }}
+              >
+                Use Suggested Role
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <div className="card" style={{ borderColor: 'var(--warm)', background: 'rgba(239, 68, 68, 0.1)', marginBottom: 20 }}>
+              <strong style={{ color: 'var(--warm)' }}>Notice</strong>
+              <p style={{ margin: '6px 0 0', color: 'var(--ink)' }}>{error}</p>
+            </div>
+          )}
+
+          <div className="grid2" style={{ gap: 20 }}>
+            {/* Role Selection */}
+            <div className="card" style={{ margin: 0, padding: '18px' }}>
+              <label htmlFor="role-select" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
+                Target Role / Tech Stack
+              </label>
+              <select
+                id="role-select"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8 }}
+              >
+                {PRESET_ROLES.map((role) => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
+
+              {selectedRole === 'Custom Role' && (
+                <div style={{ marginTop: 12 }}>
+                  <label htmlFor="custom-role" style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 4 }}>
+                    Specify Your Custom Role or Focus
+                  </label>
+                  <input
+                    id="custom-role"
+                    type="text"
+                    placeholder="e.g. Distributed Systems Engineer, Golang Microservices"
+                    value={customRoleInput}
+                    onChange={(e) => setCustomRoleInput(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Experience Level Selection */}
+            <div className="card" style={{ margin: 0, padding: '18px' }}>
+              <label htmlFor="exp-level" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
+                Experience Level
+              </label>
+              <select
+                id="exp-level"
+                value={experienceLevel}
+                onChange={(e) => setExperienceLevel(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8 }}
+              >
+                {EXPERIENCE_LEVELS.map((lvl) => (
+                  <option key={lvl.value} value={lvl.value}>{lvl.label}</option>
+                ))}
+              </select>
+              <p className="muted small" style={{ margin: '8px 0 0' }}>
+                Sets the initial baseline difficulty. The interviewer will adapt question complexity dynamically based on your answers.
+              </p>
+            </div>
           </div>
 
-          {/* Experience Level Selection */}
-          <div className="card" style={{ margin: 0, padding: '18px' }}>
-            <label htmlFor="exp-level" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
-              Experience Level
+          {/* Time Limit Option */}
+          <div className="card" style={{ marginTop: 20, padding: '18px' }}>
+            <label htmlFor="time-limit" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
+              Session Time Limit (Optional)
             </label>
             <select
-              id="exp-level"
-              value={experienceLevel}
-              onChange={(e) => setExperienceLevel(e.target.value)}
+              id="time-limit"
+              value={timeLimitMinutes}
+              onChange={(e) => setTimeLimitMinutes(Number(e.target.value))}
               style={{ width: '100%', padding: '10px 12px', borderRadius: 8 }}
             >
-              {EXPERIENCE_LEVELS.map((lvl) => (
-                <option key={lvl.value} value={lvl.value}>{lvl.label}</option>
+              {TIME_LIMITS.map((limit) => (
+                <option key={limit.value} value={limit.value}>{limit.label}</option>
               ))}
             </select>
             <p className="muted small" style={{ margin: '8px 0 0' }}>
-              Sets the initial baseline difficulty. The interviewer will adapt question complexity dynamically based on your answers.
+              {timeLimitMinutes > 0
+                ? `The session will run for ${timeLimitMinutes} minutes and automatically conclude with your comprehensive evaluation.`
+                : 'Take as long as you need. You can wrap up and evaluate the interview at any time.'}
             </p>
           </div>
-        </div>
 
-        {/* Time Limit Option */}
-        <div className="card" style={{ marginTop: 20, padding: '18px' }}>
-          <label htmlFor="time-limit" style={{ fontWeight: 600, marginBottom: 8, display: 'block' }}>
-            Session Time Limit (Optional)
-          </label>
-          <select
-            id="time-limit"
-            value={timeLimitMinutes}
-            onChange={(e) => setTimeLimitMinutes(Number(e.target.value))}
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 8 }}
-          >
-            {TIME_LIMITS.map((limit) => (
-              <option key={limit.value} value={limit.value}>{limit.label}</option>
-            ))}
-          </select>
-          <p className="muted small" style={{ margin: '8px 0 0' }}>
-            {timeLimitMinutes > 0
-              ? `The session will run for ${timeLimitMinutes} minutes and automatically conclude with your comprehensive evaluation.`
-              : 'Take as long as you need. You can wrap up and evaluate the interview at any time.'}
-          </p>
-        </div>
-
-        {/* Start Button */}
-        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
-          <button
-            type="button"
-            className="primary"
-            onClick={handleStartInterview}
-            disabled={isEvaluating || (selectedRole === 'Custom Role' && !customRoleInput.trim())}
-            style={{ minWidth: 220, padding: '13px 24px', fontSize: '1rem' }}
-          >
-            {isEvaluating ? 'Preparing Interviewer…' : 'Start Mock Interview →'}
-          </button>
-        </div>
-      </section>
+          {/* Start Button */}
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="primary"
+              onClick={handleStartInterview}
+              disabled={isEvaluating || (selectedRole === 'Custom Role' && !customRoleInput.trim())}
+              style={{ minWidth: 220, padding: '13px 24px', fontSize: '1rem' }}
+            >
+              {isEvaluating ? 'Preparing Interviewer…' : 'Start Mock Interview →'}
+            </button>
+          </div>
+        </section>
+      </div>
     );
   }
 
@@ -663,11 +1124,11 @@ export default function InterviewPage() {
         >
           <div>
             <span className="tag ok" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Interview Complete
+              {isReviewingPast ? 'Historical Review' : 'Interview Complete'}
             </span>
             <h1 style={{ margin: '8px 0 4px', fontSize: '1.8rem' }}>Executive Evaluation Debrief</h1>
             <p className="muted" style={{ margin: 0 }}>
-              Role: <b>{effectiveRole}</b> ({experienceLevel}) · Duration: {formatTimeMMSS(sessionSeconds)} · Questions Answered: {finalResults.transcript.length}
+              Role: <b>{finalResults.role || effectiveRole}</b> ({finalResults.experienceLevel || experienceLevel}) · Duration: {formatTimeMMSS(sessionSeconds)} · Questions Answered: {finalResults.transcript?.length || 0}
             </p>
           </div>
 
@@ -694,11 +1155,11 @@ export default function InterviewPage() {
         </div>
 
         {/* Executive Verdict */}
-        <div className="card" style={{ marginTop: 20, background: '#f8fafc', padding: '18px' }}>
-          <strong style={{ display: 'block', marginBottom: 6, fontSize: '1rem' }}>Hiring Committee Verdict</strong>
-          <p style={{ margin: 0, lineHeight: 1.6 }}>{finalResults.verdict}</p>
+        <div className="card" style={{ marginTop: 20, background: 'var(--card)', border: '1px solid var(--line)', padding: '18px' }}>
+          <strong style={{ display: 'block', marginBottom: 6, fontSize: '1rem', color: 'var(--ink)' }}>Hiring Committee Verdict</strong>
+          <p style={{ margin: 0, lineHeight: 1.6, color: 'var(--ink)' }}>{finalResults.verdict}</p>
           {finalResults.pacingFeedback && (
-            <p className="muted small" style={{ margin: '8px 0 0', fontStyle: 'italic' }}>
+            <p className="muted small" style={{ margin: '8px 0 0', fontStyle: 'italic', color: 'var(--mut)' }}>
               ⏱ Pacing Analysis: {finalResults.pacingFeedback}
             </p>
           )}
@@ -714,10 +1175,10 @@ export default function InterviewPage() {
                   .replace(/([A-Z])/g, ' $1')
                   .replace(/^./, (str) => str.toUpperCase());
                 return (
-                  <div key={category} className="card" style={{ margin: 0, padding: '14px 16px' }}>
+                  <div key={category} className="card" style={{ margin: 0, padding: '14px 16px', background: 'var(--card)', border: '1px solid var(--line)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{label}</span>
-                      <b>{score}%</b>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--ink)' }}>{label}</span>
+                      <b style={{ color: 'var(--ink)' }}>{score}%</b>
                     </div>
                     <div className="bar" style={{ margin: 0, height: 8 }}>
                       <i style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
@@ -731,23 +1192,23 @@ export default function InterviewPage() {
 
         {/* Strengths & Weaknesses Grid */}
         <div className="grid2" style={{ marginTop: 20, gap: 16 }}>
-          <div className="card" style={{ margin: 0, padding: '18px', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-            <h3 style={{ margin: '0 0 10px', color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="card" style={{ margin: 0, padding: '18px', background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)' }}>
+            <h3 style={{ margin: '0 0 10px', color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>✓</span> Demonstrated Strengths
             </h3>
-            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-              {finalResults.strengths.map((item, idx) => (
+            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, color: 'var(--ink)' }}>
+              {(finalResults.strengths || []).map((item, idx) => (
                 <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
               ))}
             </ul>
           </div>
 
-          <div className="card" style={{ margin: 0, padding: '18px', background: '#fef2f2', border: '1px solid #fecaca' }}>
-            <h3 style={{ margin: '0 0 10px', color: '#991b1b', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="card" style={{ margin: 0, padding: '18px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+            <h3 style={{ margin: '0 0 10px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>⚠</span> Areas for Growth
             </h3>
-            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-              {finalResults.weaknesses.map((item, idx) => (
+            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, color: 'var(--ink)' }}>
+              {(finalResults.weaknesses || []).map((item, idx) => (
                 <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
               ))}
             </ul>
@@ -755,10 +1216,10 @@ export default function InterviewPage() {
         </div>
 
         {/* Actionable Suggestions */}
-        <div className="card" style={{ marginTop: 20, padding: '18px' }}>
+        <div className="card" style={{ marginTop: 20, padding: '18px', background: 'var(--card)', border: '1px solid var(--line)' }}>
           <h3 style={{ margin: '0 0 10px' }}>Actionable Recommendations</h3>
-          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6 }}>
-            {finalResults.suggestions.map((item, idx) => (
+          <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.6, color: 'var(--ink)' }}>
+            {(finalResults.suggestions || []).map((item, idx) => (
               <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
             ))}
           </ul>
@@ -770,26 +1231,28 @@ export default function InterviewPage() {
             <h3 style={{ margin: '0 0 12px' }}>Detailed Q&A Transcript Review</h3>
             <div style={{ display: 'grid', gap: 12 }}>
               {finalResults.transcript.map((entry, idx) => (
-                <div key={idx} className="card" style={{ margin: 0, padding: '16px' }}>
+                <div key={idx} className="card" style={{ margin: 0, padding: '16px', background: 'var(--card)', border: '1px solid var(--line)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
                     <strong>Question {idx + 1}</strong>
                     {entry.responseTimeSeconds && (
                       <span className="muted small">Time taken: {entry.responseTimeSeconds}s</span>
                     )}
                   </div>
-                  <p style={{ margin: '0 0 10px', fontWeight: 600 }}>{entry.question}</p>
+                  <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--ink)' }}>{entry.question}</p>
                   <div
                     style={{
-                      background: '#f8fafc',
+                      background: 'var(--bg)',
+                      border: '1px solid var(--line)',
                       padding: '10px 14px',
                       borderRadius: 8,
                       fontSize: '0.9rem',
                       lineHeight: 1.5,
                       marginBottom: 8,
+                      color: 'var(--ink)',
                     }}
                   >
-                    <small className="muted" style={{ display: 'block', marginBottom: 2 }}>Your Response:</small>
-                    {entry.answer}
+                    <small className="muted" style={{ display: 'block', marginBottom: 2 }}>Candidate Response:</small>
+                    {entry.answer || '(No answer recorded)'}
                   </div>
                   {entry.detailedFeedback && (
                     <p className="muted small" style={{ margin: 0, borderLeft: '3px solid var(--pri)', paddingLeft: 10 }}>
@@ -813,7 +1276,7 @@ export default function InterviewPage() {
             onClick={handleResetSession}
             style={{ width: 'auto', padding: '11px 24px' }}
           >
-            Start New Interview
+            ← Back to Interview Center
           </button>
         </div>
       </section>
@@ -941,7 +1404,8 @@ export default function InterviewPage() {
             style={{
               marginTop: 18,
               padding: '10px 12px',
-              background: '#fafbfa',
+              background: 'var(--pri-subtle)',
+              border: '1px solid var(--line)',
               borderRadius: 8,
               fontSize: '0.78rem',
               color: 'var(--mut)',
@@ -977,23 +1441,24 @@ export default function InterviewPage() {
                       display: 'flex',
                       gap: 12,
                       alignItems: 'flex-start',
-                      background: '#f0fdfa',
-                      border: '1px solid #ccfbf1',
+                      background: 'var(--card)',
+                      border: '1.5px solid var(--pri)',
                       borderRadius: 12,
-                      padding: '14px 16px',
+                      padding: '16px 18px',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
                     }}
                   >
                     <span style={{ fontSize: '1.2rem', marginTop: 2 }}>🎙</span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <strong style={{ color: 'var(--pri)', fontSize: '0.85rem' }}>Interviewer</strong>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <strong style={{ color: 'var(--pri)', fontSize: '0.88rem', letterSpacing: '0.02em', textTransform: 'uppercase' }}>Interviewer</strong>
                         {msg.difficulty && (
-                          <span className="muted small" style={{ textTransform: 'capitalize' }}>
+                          <span className="muted small" style={{ textTransform: 'capitalize', color: 'var(--mut)' }}>
                             {msg.difficulty}
                           </span>
                         )}
                       </div>
-                      <p style={{ margin: 0, lineHeight: 1.5, fontSize: '0.98rem' }}>{msg.text}</p>
+                      <p style={{ margin: 0, lineHeight: 1.6, fontSize: '1.02rem', color: 'var(--ink)', fontWeight: 500 }}>{msg.text}</p>
                     </div>
                   </div>
                 );
@@ -1002,10 +1467,10 @@ export default function InterviewPage() {
               if (msg.sender === 'ai' && msg.type === 'feedback') {
                 const verdictStyle =
                   msg.verdict === 'strong'
-                    ? { bg: '#dcfce7', border: '#86efac', text: '#15803d', label: 'Strong Answer' }
+                    ? { bg: 'rgba(34, 197, 94, 0.12)', border: 'rgba(34, 197, 94, 0.35)', text: '#22c55e', label: 'Strong Answer' }
                     : msg.verdict === 'satisfactory'
-                      ? { bg: '#fef3c7', border: '#fde047', text: '#a16207', label: 'Satisfactory' }
-                      : { bg: '#fee2e2', border: '#fca5a5', text: '#b91c1c', label: 'Needs Improvement' };
+                      ? { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.35)', text: '#f59e0b', label: 'Satisfactory' }
+                      : { bg: 'rgba(239, 68, 68, 0.12)', border: 'rgba(239, 68, 68, 0.35)', text: '#ef4444', label: 'Needs Improvement' };
 
                 return (
                   <div
@@ -1023,7 +1488,7 @@ export default function InterviewPage() {
                         {verdictStyle.label} ({msg.score}/100)
                       </span>
                     </div>
-                    <p style={{ margin: 0, lineHeight: 1.5, color: '#1f2937' }}>{msg.text}</p>
+                    <p style={{ margin: 0, lineHeight: 1.5, color: 'var(--ink)' }}>{msg.text}</p>
                   </div>
                 );
               }
@@ -1037,22 +1502,22 @@ export default function InterviewPage() {
                     flexDirection: 'column',
                     alignSelf: 'flex-end',
                     maxWidth: '85%',
-                    background: '#ffffff',
-                    border: '1px solid var(--line)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    background: 'var(--card)',
+                    border: '1px solid var(--line-strong)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                     borderRadius: '12px 12px 2px 12px',
                     padding: '12px 16px',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 4 }}>
-                    <strong style={{ fontSize: '0.82rem', color: 'var(--mut)' }}>You</strong>
+                    <strong style={{ fontSize: '0.82rem', color: 'var(--pri)' }}>You</strong>
                     {msg.responseTimeSeconds && (
-                      <span className="muted small" style={{ fontSize: '0.75rem' }}>
+                      <span className="muted small" style={{ fontSize: '0.75rem', color: 'var(--mut)' }}>
                         ⏱ {msg.responseTimeSeconds}s
                       </span>
                     )}
                   </div>
-                  <p style={{ margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{msg.text}</p>
+                  <p style={{ margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap', color: 'var(--ink)' }}>{msg.text}</p>
                 </div>
               );
             })}
@@ -1064,7 +1529,8 @@ export default function InterviewPage() {
                   alignItems: 'center',
                   gap: 10,
                   padding: '10px 14px',
-                  background: '#f8fafc',
+                  background: 'var(--card)',
+                  border: '1px solid var(--line)',
                   borderRadius: 8,
                   color: 'var(--pri)',
                   fontSize: '0.9rem',
@@ -1131,9 +1597,9 @@ export default function InterviewPage() {
                     onClick={toggleListening}
                     disabled={isEvaluating}
                     style={{
-                      background: isListening ? '#fee2e2' : '#ffffff',
-                      color: isListening ? '#991b1b' : 'var(--ink)',
-                      borderColor: isListening ? '#fca5a5' : 'var(--line)',
+                      background: isListening ? 'rgba(239, 68, 68, 0.15)' : 'var(--card)',
+                      color: isListening ? '#ef4444' : 'var(--ink)',
+                      borderColor: isListening ? '#ef4444' : 'var(--line)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,

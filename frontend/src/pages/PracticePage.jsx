@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import mermaid from 'mermaid';
 import { evaluateAnswer, generateQuestion, generateSessionSummary } from '../services/practiceService';
 import { moveDifficulty } from '../utils/difficultyUtils.js';
+import { progressService } from '../services/progressService';
 
 const PRACTICE_HISTORY_KEY = 'sf_practice_history';
 
@@ -129,6 +130,18 @@ export default function PracticePage() {
       setSessionEnded(true);
       setCurrentQuestion(null);
       setEvaluation(null);
+
+      progressService.addActivity({
+        type: 'practice',
+        title: `Practice: ${topic.trim() || 'General Practice'}`,
+        score: sessionSummary?.masteryScore || (stats.attempted > 0 ? Math.round((stats.correct / stats.attempted) * 100) : 70),
+        durationMinutes: Math.max(Math.round(finalHistory.length * 3), 5),
+        details: {
+          topic: topic.trim(),
+          attempted: stats.attempted,
+          correct: stats.correct,
+        },
+      });
     } catch (err) {
       setError(err?.message || 'The session summary could not be generated.');
       setRetryAction(() => () => finalizeSession(finalHistory));

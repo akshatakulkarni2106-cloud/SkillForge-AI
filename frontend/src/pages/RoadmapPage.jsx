@@ -316,7 +316,7 @@ export default function RoadmapPage() {
           </h2>
 
           {!weakSkills.length ? (
-            <div className="card" style={{ background: '#fafbfa', padding: '16px' }}>
+            <div className="card" style={{ background: 'var(--pri-subtle)', padding: '16px' }}>
               <p className="muted" style={{ margin: 0 }}>
                 No weak skills currently identified in your Skill Gap profile. You can pick from other skills or add custom skills below.
               </p>
@@ -440,7 +440,7 @@ export default function RoadmapPage() {
           </div>
         )}
 
-        <div className="card" style={{ marginTop: 20, background: '#fafbfa', borderStyle: 'dashed' }}>
+        <div className="card" style={{ marginTop: 20, background: 'var(--pri-subtle)', borderStyle: 'dashed' }}>
           <label htmlFor="custom-skill-input" style={{ fontWeight: 600, marginBottom: 8 }}>
             Add a custom skill or technology
           </label>

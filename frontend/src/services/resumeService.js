@@ -10,14 +10,27 @@ export async function analyzeResumeWithAi(resumeText, targetRole = 'Software Eng
     throw new Error('Resume text is required for AI critique.');
   }
 
-  const prompt = `You are a Principal Tech Recruiter and Senior ATS Engineer specializing in technical career progression for ${targetRole} positions.
+  const prompt = `You are a Principal Tech Recruiter and Senior ATS Evaluation Engineer specializing in ${targetRole} technical hiring.
 
-Evaluate the following resume text rigorously, realistically, and constructively.
+Evaluate the candidate resume below specifically and objectively against the industry requirements for a "${targetRole}".
+
+OBJECTIVE SCORING CRITERIA (0-100 scale, evaluate strictly based on alignment with "${targetRole}"):
+1. Skills & Tech Stack Alignment (30% weight):
+   - Compare candidate's specific programming languages, frameworks, libraries, databases, and tools directly against modern requirements for a ${targetRole}.
+   - If the candidate's tech stack matches 80%+ of core ${targetRole} requirements (e.g. MERN stack for Full Stack/MERN Developer, React for Frontend), score high (78-95).
+   - If the resume is missing fundamental technologies required for ${targetRole} (e.g. applying for DevOps without CI/CD/Cloud or AI/ML without Python/PyTorch), score proportionally lower (30-55).
+2. Impact & Metrics (25% weight):
+   - Check if bullet points include quantified business outcomes, metrics, scale, percentages, latency improvements, or user counts.
+   - If bullets describe responsibilities without metrics, provide actionable advice on what numbers to quantify.
+3. Role Relevance & Experience (25% weight):
+   - Assess depth of projects, real-world internships, code ownership, system complexity, and production deployment relative to the seniority expectations of a ${targetRole}.
+4. Brevity & ATS Scannability (20% weight):
+   - Check section hierarchy, bullet structure, standard headings, clear contact links, and ATS parseability.
+
 CRITICAL INSTRUCTIONS:
-1. Do NOT use hardcoded or generic boilerplate text. Every comment, score, and recommendation MUST directly quote or reference specific text, skills, projects, and experiences found in the candidate's actual resume below.
-2. Calibrate scores realistically (most unoptimized resumes score between 55 and 75).
-3. Identify line-specific strengths (quote exact words or phrasing) and line-specific weaknesses (quote vague bullet points and explain how to improve them with metrics, scale, and action verbs).
-4. For verified certifications: Recommend ONLY standard, recognized, verifiable credentials from established bodies (e.g. AWS, Microsoft Azure, Google Cloud, Meta/Coursera, CompTIA, Linux Foundation / CNCF, HashiCorp). For each certification, explain specifically why it closes a tangible gap identified in THIS resume.
+- Every comment, strength, weakness, and recommendation MUST directly quote or reference specific text, skills, projects, and experiences found in the candidate's actual resume below.
+- Do NOT use generic placeholder text.
+- Do NOT arbitrarily force scores into a narrow band. The score MUST genuinely reflect how well the candidate's actual profile matches "${targetRole}".
 
 Resume Text:
 ---
@@ -28,8 +41,8 @@ Target Role: ${targetRole}
 
 Respond strictly with a JSON object in this exact schema (no markdown outside the JSON):
 {
-  "overallScore": <integer 0-100>,
-  "summary": "<honest 2-3 sentence assessment of the candidate's core strengths and main liability>",
+  "overallScore": <integer 0-100 calculated as weighted sum: Math.round(impact*0.25 + formatting*0.20 + skills*0.30 + experience*0.25)>,
+  "summary": "<honest, role-tailored 2-3 sentence assessment of candidate fit for ${targetRole}, their greatest competitive edge, and key growth area>",
   "scoreBreakdown": {
     "impact": {
       "score": <integer 0-100>,
@@ -41,11 +54,11 @@ Respond strictly with a JSON object in this exact schema (no markdown outside th
     },
     "skills": {
       "score": <integer 0-100>,
-      "feedback": "<detailed feedback on relevance, currency, and depth of technical skills for the target role>"
+      "feedback": "<detailed feedback comparing candidate skills against requirements for ${targetRole}>"
     },
     "experience": {
       "score": <integer 0-100>,
-      "feedback": "<detailed feedback on career progression, complexity of responsibilities, and seniority level>"
+      "feedback": "<detailed feedback on project complexity and experience relevance to ${targetRole}>"
     }
   },
   "whatsWorking": [
@@ -69,7 +82,7 @@ Respond strictly with a JSON object in this exact schema (no markdown outside th
     {
       "name": "<Exact official certification name, e.g. AWS Certified Solutions Architect – Associate>",
       "issuingBody": "<Official issuing organization, e.g. Amazon Web Services>",
-      "rationale": "<Specific explanation of why this credential solves a concrete gap in this resume>",
+      "rationale": "<Specific explanation of why this credential solves a concrete gap in this resume for ${targetRole}>",
       "difficulty": "<Foundational | Associate | Professional>"
     }
   ]
@@ -77,13 +90,29 @@ Respond strictly with a JSON object in this exact schema (no markdown outside th
 
   const responseText = await callGroqModel(
     [
-      { role: 'system', content: 'You are an expert technical resume reviewer and ATS specialist. Return only valid JSON.' },
+      { role: 'system', content: 'You are an expert technical resume reviewer and ATS ranking specialist. Return only valid JSON.' },
       { role: 'user', content: prompt },
     ],
-    { temperature: 0.25, maxTokens: 2500 }
+    { temperature: 0.35, maxTokens: 2500 }
   );
 
-  return extractJsonObject(responseText);
+  const parsed = extractJsonObject(responseText);
+
+  // Mathematically guarantee that overallScore matches the weighted category scores
+  if (parsed?.scoreBreakdown) {
+    const impact = Number(parsed.scoreBreakdown.impact?.score) || 50;
+    const formatting = Number(parsed.scoreBreakdown.formatting?.score) || 65;
+    const skills = Number(parsed.scoreBreakdown.skills?.score) || 60;
+    const experience = Number(parsed.scoreBreakdown.experience?.score) || 50;
+
+    const weightedScore = Math.round(
+      (skills * 0.30) + (impact * 0.25) + (experience * 0.25) + (formatting * 0.20)
+    );
+
+    parsed.overallScore = Math.min(100, Math.max(10, weightedScore));
+  }
+
+  return parsed;
 }
 
 /**
