@@ -249,9 +249,33 @@ export function SettingsProvider({ children }) {
     }
   };
 
+  const isDark = useMemo(() => {
+    if (settings.appearance.theme === 'dark') return true;
+    if (settings.appearance.theme === 'light') return false;
+    return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }, [settings.appearance.theme]);
+
+  const toggleTheme = () => {
+    const currentTheme = settings.appearance.theme;
+    let nextTheme = 'dark';
+    if (currentTheme === 'dark') {
+      nextTheme = 'light';
+    } else if (currentTheme === 'light') {
+      nextTheme = 'dark';
+    } else {
+      const isSystemDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      nextTheme = isSystemDark ? 'light' : 'dark';
+    }
+    updateSection('appearance', { theme: nextTheme });
+    toast.success(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} Mode`, { id: 'theme-toggle', duration: 1500 });
+  };
+
   const contextValue = useMemo(
     () => ({
       settings,
+      theme: settings.appearance.theme,
+      isDark,
+      toggleTheme,
       updateSection,
       resetSection,
       resetAll,
@@ -259,7 +283,7 @@ export function SettingsProvider({ children }) {
       importSettings,
       accentPalettes: ACCENT_PALETTES,
     }),
-    [settings]
+    [settings, isDark]
   );
 
   return <SettingsContext.Provider value={contextValue}>{children}</SettingsContext.Provider>;

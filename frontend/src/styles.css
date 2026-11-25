@@ -772,6 +772,31 @@ button:focus-visible, a:focus-visible {
   border-color: var(--pri) !important;
   color: var(--pri) !important;
 }
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  transition: all .2s ease;
+  user-select: none;
+}
+.theme-toggle-btn:hover {
+  background: var(--pri-subtle);
+  border-color: var(--pri);
+  color: var(--pri);
+  transform: translateY(-1px);
+}
+.side .theme-toggle-btn {
+  background: var(--side-hover);
+  color: var(--side-text);
+  border-color: #3d1b37;
+}
+.side .theme-toggle-btn:hover {
+  background: var(--pri);
+  color: #fff;
+  border-color: var(--pri);
+}
 [data-theme='dark'] input,
 [data-theme='dark'] select,
 [data-theme='dark'] textarea {

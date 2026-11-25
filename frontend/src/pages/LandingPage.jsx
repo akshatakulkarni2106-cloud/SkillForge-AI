@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 export default function LandingPage() {
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useSettings();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('resume');
 
@@ -60,6 +62,26 @@ export default function LandingPage() {
           </nav>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button
+              type="button"
+              className="btn theme-toggle-btn"
+              onClick={toggleTheme}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 14px',
+                borderRadius: 999,
+                fontSize: '.86rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <span>{isDark ? '☀️' : '🌙'}</span>
+              <span>{isDark ? 'Light' : 'Dark'}</span>
+            </button>
+
             {user ? (
               <Link to="/dashboard" className="btn primary" style={{ textDecoration: 'none', padding: '9px 18px' }}>
                 Go to Dashboard →
