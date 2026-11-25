@@ -134,7 +134,7 @@ main { padding: 32px 36px; max-width: 1200px; width: 100%; margin: 0 auto; }
   border-radius: 10px;
   padding: 10px 16px;
   border: 1px solid var(--line-strong);
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   text-decoration: none;
   font-size: .92rem;
@@ -215,7 +215,7 @@ input, select, textarea {
   padding: 11px 14px;
   border: 1.5px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card);
   color: var(--ink);
   transition: all .18s ease;
 }
@@ -371,7 +371,7 @@ button:focus-visible, a:focus-visible {
   margin-bottom: 22px;
 }
 .breakdown-card {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 18px;
@@ -379,6 +379,7 @@ button:focus-visible, a:focus-visible {
   flex-direction: column;
   gap: 8px;
   transition: all .2s;
+  color: var(--ink);
 }
 .breakdown-card:hover {
   transform: translateY(-2px);
@@ -433,7 +434,7 @@ button:focus-visible, a:focus-visible {
 }
 
 .cert-card {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line-strong);
   border-radius: 14px;
   padding: 18px 20px;
@@ -442,6 +443,7 @@ button:focus-visible, a:focus-visible {
   gap: 10px;
   position: relative;
   transition: all .2s;
+  color: var(--ink);
 }
 .cert-card:hover {
   border-color: var(--pri);
@@ -478,18 +480,19 @@ button:focus-visible, a:focus-visible {
 }
 
 .tailor-box {
-  background: linear-gradient(180deg, #ffffff 0%, #fff7f9 100%);
-  border: 1.5px solid #fbcfe8;
+  background: var(--pri-subtle);
+  border: 1.5px solid var(--line-strong);
   border-radius: 18px;
   padding: 26px;
   margin-top: 26px;
 }
 .rewrite-card {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 14px;
+  color: var(--ink);
 }
 .rewrite-before {
   font-size: .88rem;
@@ -517,7 +520,7 @@ button:focus-visible, a:focus-visible {
 }
 
 .copy-btn {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line-strong);
   color: var(--ink);
   font-size: .8rem;
@@ -628,7 +631,8 @@ button:focus-visible, a:focus-visible {
   width: 100%;
   text-align: left;
   padding: 14px 18px;
-  background: #fff;
+  background: var(--card);
+  color: var(--ink);
   border: 1.5px solid var(--line);
   border-radius: 12px;
   font-size: .94rem;
@@ -693,6 +697,26 @@ button:focus-visible, a:focus-visible {
    ========================================================================== */
 
 /* Dark Mode Theme */
+[data-theme='light'] {
+  --bg: #fdf2f5;
+  --ink: #200a16;
+  --mut: #7a4f65;
+  --line: #fce7f1;
+  --line-strong: #fbcfe8;
+  --card: #ffffff;
+  --pri: #e11d48;
+  --pri-gradient: linear-gradient(135deg, #e11d48 0%, #db2777 100%);
+  --pri-hover: #be123c;
+  --pri-subtle: #fff1f5;
+  --warm: #db2777;
+  --accent: #f43f5e;
+  --side: #180815;
+  --side-text: #fce7f1;
+  --side-mut: #c090aa;
+  --side-hover: #2e1028;
+  --side-active: linear-gradient(135deg, #e11d48, #db2777);
+}
+
 [data-theme='dark'] {
   --bg: #0d060c;
   --ink: #fdf2f7;
@@ -724,6 +748,97 @@ button:focus-visible, a:focus-visible {
 }
 [data-theme='dark'] .skeleton {
   background: linear-gradient(90deg, #240c21, #32112e, #240c21);
+}
+
+/* Dark mode theme overrides for tags, callouts, and interactive items */
+[data-theme='dark'] .tag.ok {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+[data-theme='dark'] .tag.mid {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme='dark'] .tag.low {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+[data-theme='dark'] .tag.pink {
+  background: rgba(236, 72, 153, 0.18);
+  color: #f472b6;
+  border-color: rgba(236, 72, 153, 0.35);
+}
+[data-theme='dark'] .opts .right {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10b981;
+  color: #34d399;
+}
+[data-theme='dark'] .opts .wrong {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #f43f5e;
+  color: #f87171;
+}
+[data-theme='dark'] .critique-item.pos {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+}
+[data-theme='dark'] .critique-item.neg {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+}
+[data-theme='dark'] .rewrite-before {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: #f43f5e;
+  color: #fda4af;
+}
+[data-theme='dark'] .rewrite-after {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+[data-theme='dark'] .cert-rationale {
+  background: rgba(225, 29, 72, 0.14);
+  color: #fce7f1;
+}
+[data-theme='dark'] .clone-badge.warning {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.35);
+  color: #fda4af;
+}
+[data-theme='dark'] .clone-badge.verified {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #6ee7b7;
+}
+[data-theme='dark'] .chips span {
+  background: #260c21;
+  color: #f472b6;
+  border-color: #4a153b;
+}
+[data-theme='dark'] .drop {
+  background: #1a0817;
+  border-color: #be185d;
+  color: #f472b6;
+}
+[data-theme='dark'] .asmt-mcq-opt.selected {
+  background: rgba(225, 29, 72, 0.18);
+  border-color: var(--pri);
+  color: var(--ink);
+}
+[data-theme='dark'] .asmt-mcq-opt.right {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
+}
+[data-theme='dark'] .asmt-mcq-opt.wrong {
+  background: rgba(244, 63, 94, 0.18) !important;
+  border-color: #f43f5e !important;
+  color: #fda4af !important;
 }
 
 /* High Contrast Mode */

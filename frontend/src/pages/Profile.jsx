@@ -228,14 +228,14 @@ export default function Profile() {
 
       {/* Notifications */}
       {saveSuccess && (
-        <div className="card" style={{ background: '#f0fdf4', borderColor: '#86efac', marginTop: 16 }}>
-          <p style={{ margin: 0, color: '#166534', fontWeight: 600 }}>✓ {saveSuccess}</p>
+        <div className="card" style={{ background: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.35)', marginTop: 16 }}>
+          <p style={{ margin: 0, color: '#10b981', fontWeight: 600 }}>✓ {saveSuccess}</p>
         </div>
       )}
 
       {error && (
-        <div className="card" style={{ background: '#fef2f2', borderColor: '#fca5a5', marginTop: 16 }}>
-          <p style={{ margin: 0, color: '#991b1b', fontWeight: 600 }}>⚠ {error}</p>
+        <div className="card" style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)', marginTop: 16 }}>
+          <p style={{ margin: 0, color: '#ef4444', fontWeight: 600 }}>⚠ {error}</p>
         </div>
       )}
 

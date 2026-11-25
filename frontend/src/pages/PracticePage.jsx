@@ -13,9 +13,9 @@ const difficultyOptions = [
 ];
 
 const difficultyStyles = {
-  easy: { background: '#dcf1e5', color: '#14532d' },
-  medium: { background: '#fef3c7', color: '#92400e' },
-  hard: { background: '#fee2e2', color: '#991b1b' },
+  easy: { background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.3)' },
+  medium: { background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' },
+  hard: { background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' },
 };
 
 const createSessionId = () => {

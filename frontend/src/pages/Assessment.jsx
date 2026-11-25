@@ -726,13 +726,13 @@ export default function Assessment() {
           <div className="asmt-rewards-box">
             <h3 style={{ margin: '0 0 14px', fontSize: '1.1rem' }}>Session Rewards & Stats</h3>
             <div className="cards" style={{ margin: '0 0 14px', gridTemplateColumns: '1fr 1fr' }}>
-              <div className="card stat" style={{ background: '#f0fdf4', borderColor: '#bbf7d0', padding: 14 }}>
+              <div className="card stat" style={{ background: 'rgba(16, 185, 129, 0.12)', borderColor: 'rgba(16, 185, 129, 0.3)', padding: 14 }}>
                 <small>XP Gained</small>
-                <b style={{ color: '#15803d' }}>+{finalReport.sessionXp}</b>
+                <b style={{ color: '#10b981' }}>+{finalReport.sessionXp}</b>
               </div>
-              <div className="card stat" style={{ background: '#fff7ed', borderColor: '#fed7aa', padding: 14 }}>
+              <div className="card stat" style={{ background: 'rgba(249, 115, 22, 0.12)', borderColor: 'rgba(249, 115, 22, 0.3)', padding: 14 }}>
                 <small>Best Streak</small>
-                <b style={{ color: '#c2410c' }}>{finalReport.maxStreak} 🔥</b>
+                <b style={{ color: '#f97316' }}>{finalReport.maxStreak} 🔥</b>
               </div>
             </div>
 
@@ -818,7 +818,7 @@ export default function Assessment() {
           <button
             type="button"
             className="btn"
-            style={{ width: '100%', padding: '12px', background: '#fff', fontWeight: 600 }}
+            style={{ width: '100%', padding: '12px', background: 'var(--card)', color: 'var(--ink)', fontWeight: 600 }}
             onClick={() => setShowDetailedReview(!showDetailedReview)}
           >
             {showDetailedReview ? 'Hide Question-by-Question Transcript ▲' : 'View Question-by-Question Transcript ▼'}
@@ -834,7 +834,8 @@ export default function Assessment() {
                 borderRadius: 10,
                 border: '1px solid var(--line)',
                 marginBottom: 12,
-                background: item.isCorrect ? '#fcfdfc' : '#fffdfd',
+                background: 'var(--card)',
+                color: 'var(--ink)',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <span style={{ fontWeight: 700 }}>
@@ -845,7 +846,7 @@ export default function Assessment() {
                   </span>
                 </div>
                 <p style={{ margin: '6px 0', fontSize: '.92rem' }}>{item.question}</p>
-                <div style={{ background: '#f1f5f9', padding: '8px 12px', borderRadius: 6, fontSize: '.86rem', margin: '8px 0' }}>
+                <div style={{ background: 'var(--pri-subtle)', color: 'var(--ink)', padding: '8px 12px', borderRadius: 6, fontSize: '.86rem', margin: '8px 0' }}>
                   <strong>Your Answer:</strong> {item.userAnswer}
                 </div>
                 <p className="small muted" style={{ margin: '4px 0 0' }}>
@@ -959,9 +960,9 @@ export default function Assessment() {
 
         {/* Right: How It Works & Unlocked Badges */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <section className="card" style={{ margin: 0, background: '#f8faf9' }}>
+          <section className="card" style={{ margin: 0, background: 'var(--pri-subtle)' }}>
             <h3 style={{ margin: '0 0 10px', fontSize: '1rem', color: 'var(--pri)' }}>How This Assessment Works</h3>
-            <ul style={{ paddingLeft: 18, margin: 0, fontSize: '.88rem', lineHeight: 1.6, color: '#334155' }}>
+            <ul style={{ paddingLeft: 18, margin: 0, fontSize: '.88rem', lineHeight: 1.6, color: 'var(--ink)' }}>
               <li><strong>Dynamic Formats:</strong> The AI decides the optimal format per question — MCQ, written reasoning, code debugging, or practical scenario.</li>
               <li><strong>Adaptive Progression:</strong> Question difficulty adjusts live based on your actual demonstrated reasoning.</li>
               <li><strong>Genuine AI Grading:</strong> Written and code answers are graded on actual depth and root-cause understanding, never keyword matching.</li>

@@ -297,7 +297,7 @@ export default function ProjectAnalyzer() {
 
       {/* Loading Banner */}
       {analyzing && (
-        <div className="card" style={{ textAlign: 'center', padding: 36, background: '#fff5f8', borderColor: 'var(--line-strong)' }}>
+        <div className="card" style={{ textAlign: 'center', padding: 36, background: 'var(--pri-subtle)', borderColor: 'var(--line-strong)' }}>
           <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--pri)', marginBottom: 8 }}>
             Running Live AI Project Audit…
           </div>
@@ -401,7 +401,7 @@ export default function ProjectAnalyzer() {
                 {Object.entries(currentAnalysis.stackCategorized).map(([cat, list]) => {
                   if (!Array.isArray(list) || list.length === 0) return null;
                   return (
-                    <div key={cat} style={{ background: '#fff5f8', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--line-strong)' }}>
+                    <div key={cat} style={{ background: 'var(--pri-subtle)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--line-strong)' }}>
                       <span style={{ fontSize: '.78rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--pri)', display: 'block', marginBottom: 6 }}>
                         {cat}
                       </span>
@@ -513,7 +513,8 @@ export default function ProjectAnalyzer() {
                       alignItems: 'flex-start',
                       gap: 14,
                       padding: '12px 16px',
-                      background: '#fff',
+                      background: 'var(--card)',
+                      color: 'var(--ink)',
                       border: '1px solid var(--line)',
                       borderRadius: 10,
                     }}

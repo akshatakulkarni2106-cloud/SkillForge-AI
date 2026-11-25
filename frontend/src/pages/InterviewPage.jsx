@@ -732,10 +732,10 @@ export default function InterviewPage() {
 
         {/* Error Handling for Interview Data */}
         {summaryError && (
-          <div className="card" style={{ background: '#fef2f2', borderColor: '#fca5a5', marginBottom: 20 }}>
+          <div className="card" style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <strong style={{ color: '#991b1b' }}>Could not sync interview history</strong>
+                <strong style={{ color: '#ef4444' }}>Could not sync interview history</strong>
                 <p className="muted small" style={{ margin: '4px 0 0' }}>{summaryError}</p>
               </div>
               <button type="button" className="ghost" onClick={loadInterviewSummary} style={{ fontSize: '0.85rem' }}>

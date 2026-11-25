@@ -267,7 +267,7 @@ export default function Resume() {
 
       {/* AI Analyzing banner if in progress */}
       {analyzingAi && (
-        <div className="card" style={{ textAlign: 'center', padding: 36, background: '#fff5f8', borderColor: 'var(--line-strong)' }}>
+        <div className="card" style={{ textAlign: 'center', padding: 36, background: 'var(--pri-subtle)', borderColor: 'var(--line-strong)' }}>
           <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--pri)', marginBottom: 8 }}>
             AI is analyzing your resume line by line…
           </div>
@@ -390,7 +390,7 @@ export default function Resume() {
                   </button>
                 ))}
               </div>
-              <div style={{ background: '#fff5f8', padding: '18px 20px', borderRadius: 12, border: '1px solid var(--line-strong)' }}>
+              <div style={{ background: 'var(--pri-subtle)', padding: '18px 20px', borderRadius: 12, border: '1px solid var(--line-strong)' }}>
                 <p style={{ margin: 0, fontSize: '.94rem', lineHeight: 1.6, color: 'var(--ink)' }}>
                   {critique.sectionFeedback[activeSectionTab] || 'No specific notes for this section.'}
                 </p>
@@ -492,7 +492,7 @@ export default function Resume() {
           {tailorResult && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--line-strong)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', marginBottom: 18 }}>
-                <div style={{ background: '#fff', border: '1.5px solid var(--pri)', borderRadius: 12, padding: '12px 20px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--card)', border: '1.5px solid var(--pri)', borderRadius: 12, padding: '12px 20px', textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--pri)', fontFamily: 'Bricolage Grotesque' }}>
                     {tailorResult.matchScore}%
                   </div>
@@ -508,26 +508,26 @@ export default function Resume() {
 
               {/* Keywords Comparison */}
               <div className="grid2" style={{ marginBottom: 20 }}>
-                <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
-                  <h4 style={{ margin: '0 0 10px', color: '#166534', fontSize: '.92rem' }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
+                  <h4 style={{ margin: '0 0 10px', color: '#16a34a', fontSize: '.92rem' }}>
                     ✓ Matching Keywords Found ({tailorResult.matchingKeywords?.length || 0})
                   </h4>
                   <div className="chips">
                     {tailorResult.matchingKeywords?.map((kw, i) => (
-                      <span key={i} style={{ background: '#ecfdf5', color: '#065f46', borderColor: '#a7f3d0' }}>
+                      <span key={i} className="tag ok">
                         {kw}
                       </span>
                     ))}
                   </div>
                 </div>
 
-                <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
-                  <h4 style={{ margin: '0 0 10px', color: '#991b1b', fontSize: '.92rem' }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
+                  <h4 style={{ margin: '0 0 10px', color: '#dc2626', fontSize: '.92rem' }}>
                     ⚠️ Missing / Unemphasized Keywords ({tailorResult.missingKeywords?.length || 0})
                   </h4>
                   <div className="chips">
                     {tailorResult.missingKeywords?.map((kw, i) => (
-                      <span key={i} style={{ background: '#fff1f2', color: '#9f1239', borderColor: '#fecdd3' }}>
+                      <span key={i} className="tag low">
                         {kw}
                       </span>
                     ))}
@@ -537,7 +537,7 @@ export default function Resume() {
 
               {/* Tailored Professional Summary */}
               {tailorResult.tailoredSummary && (
-                <div style={{ background: '#fff', border: '1.5px solid var(--line-strong)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+                <div style={{ background: 'var(--card)', border: '1.5px solid var(--line-strong)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--pri)' }}>✨ Tailored Professional Summary</h3>
                     <button
@@ -562,13 +562,13 @@ export default function Resume() {
                   </h3>
                   {tailorResult.bulletRewrites.map((rw, i) => (
                     <div key={i} className="rewrite-card">
-                      <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#9f1239', marginBottom: 4 }}>
+                      <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--pri)', marginBottom: 4 }}>
                         ORIGINAL WEAK / UNALIGNED BULLET:
                       </div>
                       <div className="rewrite-before">{rw.original}</div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '8px 0 4px' }}>
-                        <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#166534' }}>
+                        <div style={{ fontSize: '.8rem', fontWeight: 700, color: '#16a34a' }}>
                           OPTIMIZED REWRITE WITH JD KEYWORDS & IMPACT:
                         </div>
                         <button
@@ -591,7 +591,7 @@ export default function Resume() {
 
               {/* Interview Prep Tips */}
               {tailorResult.interviewPrepTips?.length > 0 && (
-                <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 12, padding: 18 }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: 18 }}>
                   <h3 style={{ margin: '0 0 10px', fontSize: '1rem' }}>💡 Interview Prep Questions for this JD</h3>
                   <ul style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8, fontSize: '.92rem', color: 'var(--ink)' }}>
                     {tailorResult.interviewPrepTips.map((tip, i) => (

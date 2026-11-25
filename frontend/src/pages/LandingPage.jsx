@@ -8,7 +8,7 @@ export default function LandingPage() {
   const [activeTab, setActiveTab] = useState('resume');
 
   return (
-    <div style={{ background: '#fff', color: 'var(--ink)', minHeight: '100vh', overflowX: 'hidden' }}>
+    <div style={{ background: 'var(--bg)', color: 'var(--ink)', minHeight: '100vh', overflowX: 'hidden' }}>
       {/* Top Navbar */}
       <header
         style={{
@@ -16,7 +16,7 @@ export default function LandingPage() {
           top: 0,
           zIndex: 50,
           backdropFilter: 'blur(16px)',
-          background: 'rgba(255, 255, 255, 0.88)',
+          background: 'var(--card)',
           borderBottom: '1px solid var(--line)',
         }}
       >
@@ -82,7 +82,7 @@ export default function LandingPage() {
       <section
         style={{
           padding: '80px 24px 70px',
-          background: 'radial-gradient(ellipse at 50% 10%, #fce7f1 0%, #fdf2f5 55%, #ffffff 100%)',
+          background: 'radial-gradient(ellipse at 50% 10%, var(--pri-subtle) 0%, var(--bg) 75%)',
           textAlign: 'center',
           position: 'relative',
         }}
@@ -93,8 +93,8 @@ export default function LandingPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              background: '#fff',
-              border: '1px solid #fbcfe8',
+              background: 'var(--card)',
+              border: '1px solid var(--line-strong)',
               padding: '6px 16px',
               borderRadius: 999,
               fontSize: '.86rem',
@@ -274,29 +274,29 @@ export default function LandingPage() {
             </div>
 
             {/* Visual Preview Card */}
-            <div style={{ background: '#fff5f8', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
+            <div style={{ background: 'var(--pri-subtle)', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--ink)' }}>ATS Diagnostic Preview</div>
                 <span className="tag ok">78/100 · Strong</span>
               </div>
               <div className="score-breakdown-grid" style={{ marginBottom: 16 }}>
-                <div style={{ background: '#fff', padding: 12, borderRadius: 10, border: '1px solid var(--line)' }}>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 10, border: '1px solid var(--line)' }}>
                   <div style={{ fontSize: '.78rem', color: 'var(--mut)', fontWeight: 600 }}>Impact & Metrics</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--pri)' }}>82%</div>
                 </div>
-                <div style={{ background: '#fff', padding: 12, borderRadius: 10, border: '1px solid var(--line)' }}>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 10, border: '1px solid var(--line)' }}>
                   <div style={{ fontSize: '.78rem', color: 'var(--mut)', fontWeight: 600 }}>Role Relevance</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--warm)' }}>75%</div>
                 </div>
               </div>
-              <div style={{ background: '#fff', padding: 14, borderRadius: 10, borderLeft: '3px solid #10b981', marginBottom: 10 }}>
-                <div style={{ fontSize: '.78rem', color: '#166534', fontWeight: 700 }}>✓ HIGH-IMPACT BULLET IDENTIFIED</div>
+              <div style={{ background: 'var(--card)', padding: 14, borderRadius: 10, borderLeft: '3px solid #10b981', marginBottom: 10 }}>
+                <div style={{ fontSize: '.78rem', color: '#10b981', fontWeight: 700 }}>✓ HIGH-IMPACT BULLET IDENTIFIED</div>
                 <div style={{ fontSize: '.86rem', color: 'var(--ink)', marginTop: 4 }}>
                   "Engineered distributed cache invalidation pipeline reducing P99 latency by 34%."
                 </div>
               </div>
-              <div style={{ background: '#fff', padding: 14, borderRadius: 10, borderLeft: '3px solid #f43f5e' }}>
-                <div style={{ fontSize: '.78rem', color: '#9f1239', fontWeight: 700 }}>⚠️ WEAK LINE DETECTED</div>
+              <div style={{ background: 'var(--card)', padding: 14, borderRadius: 10, borderLeft: '3px solid #f43f5e' }}>
+                <div style={{ fontSize: '.78rem', color: 'var(--pri)', fontWeight: 700 }}>⚠️ WEAK LINE DETECTED</div>
                 <div style={{ fontSize: '.86rem', color: 'var(--ink)', marginTop: 4 }}>
                   "Worked on frontend bugs and added components."
                 </div>
@@ -345,18 +345,18 @@ export default function LandingPage() {
             </div>
 
             {/* Visual Preview */}
-            <div style={{ background: '#fff5f8', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
+            <div style={{ background: 'var(--pri-subtle)', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>Project Audit Report</div>
                 <span className="tag pink">Production-Grade</span>
               </div>
-              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', padding: 12, borderRadius: 10, marginBottom: 14 }}>
-                <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#065f46' }}>⭐ Verified Original Architectural Work</div>
-                <div style={{ fontSize: '.8rem', color: '#14532d', marginTop: 2 }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', padding: 12, borderRadius: 10, marginBottom: 14 }}>
+                <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#10b981' }}>⭐ Verified Original Architectural Work</div>
+                <div style={{ fontSize: '.8rem', color: 'var(--ink)', marginTop: 2 }}>
                   Custom domain modeling, decoupled service layers, and concurrency controls detected.
                 </div>
               </div>
-              <div style={{ background: '#fff', padding: 14, borderRadius: 10, border: '1px solid var(--line)', marginBottom: 12 }}>
+              <div style={{ background: 'var(--card)', padding: 14, borderRadius: 10, border: '1px solid var(--line)', marginBottom: 12 }}>
                 <div style={{ fontSize: '.78rem', textTransform: 'uppercase', color: 'var(--pri)', fontWeight: 700 }}>
                   Generated STAR Resume Bullet
                 </div>
@@ -449,18 +449,18 @@ export default function LandingPage() {
                 </Link>
               </div>
             </div>
-            <div style={{ background: '#fff5f8', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
+            <div style={{ background: 'var(--pri-subtle)', borderRadius: 16, padding: 22, border: '1px solid var(--line-strong)' }}>
               <div style={{ fontWeight: 800, marginBottom: 12 }}>Skill Verification Hierarchy</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ background: '#fff', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>React</span>
                   <span className="tag ok">Verified · 84%</span>
                 </div>
-                <div style={{ background: '#fff', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Node.js</span>
                   <span className="tag ok">Verified (Project Proof) · 78%</span>
                 </div>
-                <div style={{ background: '#fff', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: 'var(--card)', padding: 12, borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span>Docker</span>
                   <span className="tag mid">Unverified (Resume Only) · 0%</span>
                 </div>
@@ -471,7 +471,7 @@ export default function LandingPage() {
       </section>
 
       {/* Comparison Grid Section */}
-      <section id="comparison" style={{ padding: '60px 24px', background: '#fff8fa', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
+      <section id="comparison" style={{ padding: '60px 24px', background: 'var(--pri-subtle)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div style={{ maxWidth: 1040, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: 10 }}>
@@ -483,8 +483,8 @@ export default function LandingPage() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-            <div className="card" style={{ margin: 0, border: '1px solid var(--line)', background: '#fff' }}>
-              <h3 style={{ color: '#9f1239', fontSize: '1.1rem', marginBottom: 14 }}>
+            <div className="card" style={{ margin: 0, border: '1px solid var(--line)', background: 'var(--card)' }}>
+              <h3 style={{ color: 'var(--pri)', fontSize: '1.1rem', marginBottom: 14 }}>
                 ❌ Traditional Tools
               </h3>
               <ul style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 10, fontSize: '.9rem', color: 'var(--mut)' }}>
@@ -496,7 +496,7 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            <div className="card" style={{ margin: 0, border: '2px solid var(--pri)', background: '#fff', position: 'relative', boxShadow: '0 8px 30px rgba(225, 29, 72, 0.12)' }}>
+            <div className="card" style={{ margin: 0, border: '2px solid var(--pri)', background: 'var(--card)', position: 'relative', boxShadow: '0 8px 30px rgba(225, 29, 72, 0.12)' }}>
               <div style={{ position: 'absolute', top: -12, right: 16, background: 'var(--pri)', color: '#fff', padding: '2px 10px', borderRadius: 999, fontSize: '.74rem', fontWeight: 700 }}>
                 SUPERIOR APPROACH
               </div>
