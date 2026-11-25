@@ -922,12 +922,10 @@ export default function InterviewPage() {
                             {item.experienceLevel || 'mid'}
                           </span>
                           <span
-                            className="tag ok"
+                            className={item.overallScore >= 75 ? "tag ok" : "tag mid"}
                             style={{
                               fontSize: '0.75rem',
                               fontWeight: 700,
-                              background: item.overallScore >= 75 ? '#ecfdf5' : '#fffbeb',
-                              color: item.overallScore >= 75 ? '#047857' : '#b45309',
                             }}
                           >
                             {item.overallScore}% score
@@ -1333,9 +1331,9 @@ export default function InterviewPage() {
             onClick={() => handleTriggerEndInterview(false)}
             disabled={isEndingSession || isEvaluating}
             style={{
-              background: '#fee2e2',
-              color: '#991b1b',
-              borderColor: '#fca5a5',
+              background: 'rgba(239, 68, 68, 0.15)',
+              color: '#ef4444',
+              borderColor: 'rgba(239, 68, 68, 0.35)',
               padding: '8px 14px',
               fontWeight: 600,
             }}
@@ -1346,7 +1344,7 @@ export default function InterviewPage() {
       </div>
 
       {error && (
-        <div className="card" style={{ borderColor: 'var(--warm)', background: '#fff4f0', marginBottom: 16 }}>
+        <div className="card" style={{ borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)', marginBottom: 16 }}>
           <strong style={{ color: 'var(--warm)' }}>Notice</strong>
           <p style={{ margin: '4px 0 0' }}>{error}</p>
         </div>

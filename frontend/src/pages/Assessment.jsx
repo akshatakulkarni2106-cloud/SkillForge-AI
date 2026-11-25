@@ -464,7 +464,7 @@ export default function Assessment() {
 
         {/* Error Callout */}
         {errorMessage && (
-          <div className="card" style={{ borderColor: 'var(--warm)', background: '#fff5f2', marginBottom: 16 }}>
+          <div className="card" style={{ borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)', marginBottom: 16 }}>
             <strong style={{ color: 'var(--warm)' }}>Evaluation Notice</strong>
             <p style={{ margin: '6px 0 10px', fontSize: '.92rem' }}>{errorMessage}</p>
             {retryAction && (
@@ -540,11 +540,11 @@ export default function Assessment() {
                           width: 26,
                           height: 26,
                           borderRadius: '50%',
-                          border: selectedOption === option ? '2px solid var(--pri)' : '1px solid #c7d2cb',
+                          border: selectedOption === option ? '2px solid var(--pri)' : '1px solid var(--line-strong)',
                           fontSize: '.82rem',
                           fontWeight: 700,
-                          background: selectedOption === option ? 'var(--pri)' : '#fff',
-                          color: selectedOption === option ? '#fff' : 'inherit',
+                          background: selectedOption === option ? 'var(--pri)' : 'var(--card)',
+                          color: selectedOption === option ? '#fff' : 'var(--ink)',
                         }}>
                           {String.fromCharCode(65 + idx)}
                         </span>
@@ -628,9 +628,9 @@ export default function Assessment() {
             ) : (
               /* Evaluation Feedback Screen */
               <div className="asmt-feedback asmt-feedback-pass" style={{
-                background: currentEvaluation.score >= 70 ? '#ecfdf5' : currentEvaluation.score >= 40 ? '#fffbeb' : '#fff1f2',
-                borderColor: currentEvaluation.score >= 70 ? '#6ee7b7' : currentEvaluation.score >= 40 ? '#fde68a' : '#fecdd3',
-                color: currentEvaluation.score >= 70 ? '#064e3b' : currentEvaluation.score >= 40 ? '#78350f' : '#881337',
+                background: currentEvaluation.score >= 70 ? 'rgba(16, 185, 129, 0.15)' : currentEvaluation.score >= 40 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                borderColor: currentEvaluation.score >= 70 ? 'rgba(16, 185, 129, 0.4)' : currentEvaluation.score >= 40 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                color: 'var(--ink)',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -753,7 +753,7 @@ export default function Assessment() {
 
         {/* Unlocked Badges Section */}
         {newlyUnlockedBadges.length > 0 && (
-          <section className="card" style={{ borderColor: 'var(--pri)', background: '#f8fdfb', marginBottom: 20 }}>
+          <section className="card" style={{ borderColor: 'var(--pri)', background: 'var(--pri-subtle)', marginBottom: 20 }}>
             <h3 style={{ margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>🏆</span> Badges Unlocked This Session!
             </h3>
@@ -780,8 +780,8 @@ export default function Assessment() {
           <p style={{ lineHeight: 1.6, fontSize: '.98rem' }}>{finalReport.overallSummary}</p>
 
           <div className="grid2" style={{ marginTop: 18, gap: 18 }}>
-            <div className="card" style={{ margin: 0, background: '#f8faf9', borderColor: '#d1fae5' }}>
-              <h3 style={{ color: '#065f46', margin: '0 0 8px' }}>Verified Strengths</h3>
+            <div className="card" style={{ margin: 0, background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.35)' }}>
+              <h3 style={{ color: '#10b981', margin: '0 0 8px' }}>Verified Strengths</h3>
               {finalReport.strengths?.length ? (
                 <ul style={{ paddingLeft: 18, margin: 0, fontSize: '.92rem', lineHeight: 1.6 }}>
                   {finalReport.strengths.map((s, i) => <li key={i}>{s}</li>)}
@@ -791,8 +791,8 @@ export default function Assessment() {
               )}
             </div>
 
-            <div className="card" style={{ margin: 0, background: '#fffaf8', borderColor: '#fed7aa' }}>
-              <h3 style={{ color: '#9a3412', margin: '0 0 8px' }}>Target Areas to Improve</h3>
+            <div className="card" style={{ margin: 0, background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.35)' }}>
+              <h3 style={{ color: '#f59e0b', margin: '0 0 8px' }}>Target Areas to Improve</h3>
               {finalReport.weaknesses?.length ? (
                 <ul style={{ paddingLeft: 18, margin: 0, fontSize: '.92rem', lineHeight: 1.6 }}>
                   {finalReport.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
@@ -803,7 +803,7 @@ export default function Assessment() {
             </div>
           </div>
 
-          <div style={{ marginTop: 18, padding: 16, background: '#f6faf9', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+          <div style={{ marginTop: 18, padding: 16, background: 'var(--pri-subtle)', borderRadius: 10, border: '1px solid var(--line-strong)' }}>
             <h3 style={{ margin: '0 0 8px', fontSize: '1rem', color: 'var(--pri)' }}>Concrete Action Plan:</h3>
             <ol style={{ paddingLeft: 20, margin: 0, fontSize: '.92rem', lineHeight: 1.7 }}>
               {finalReport.improvementSuggestions?.map((item, idx) => (
@@ -906,7 +906,7 @@ export default function Assessment() {
           <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Configure Assessment</h2>
 
           {errorMessage && (
-            <div style={{ background: '#fff5f2', border: '1px solid var(--warm)', padding: 12, borderRadius: 8, color: 'var(--warm)', fontSize: '.88rem' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.35)', padding: 12, borderRadius: 8, color: 'var(--warm)', fontSize: '.88rem' }}>
               <strong>Notice:</strong> {errorMessage}
             </div>
           )}

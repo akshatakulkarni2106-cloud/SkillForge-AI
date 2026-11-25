@@ -468,9 +468,10 @@ export default function ProjectAnalyzer() {
                 {currentAnalysis.resumeBullets.map((bullet, i) => (
                   <div
                     key={i}
+                    className="star-bullet-card card-light"
                     style={{
-                      background: '#fff9fb',
-                      border: '1px solid var(--line-strong)',
+                      background: 'var(--card-light, #ffffff)',
+                      border: '1px solid var(--card-light-border, #fbcfe8)',
                       borderRadius: 12,
                       padding: '16px 20px',
                       display: 'flex',
@@ -479,7 +480,7 @@ export default function ProjectAnalyzer() {
                       gap: 16,
                     }}
                   >
-                    <div style={{ fontSize: '.94rem', lineHeight: 1.6, color: 'var(--ink)' }}>
+                    <div style={{ fontSize: '.94rem', lineHeight: 1.6, color: 'var(--text-on-light, #180a14)', userSelect: 'text' }}>
                       • {bullet}
                     </div>
                     <button

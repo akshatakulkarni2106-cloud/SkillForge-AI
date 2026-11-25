@@ -216,7 +216,7 @@ export default function Resume() {
                       }
                     }}
                     style={{
-                      background: isSelected ? 'var(--pri)' : '#fdf2f8',
+                      background: isSelected ? 'var(--pri)' : 'var(--pri-subtle)',
                       color: isSelected ? '#fff' : 'var(--pri)',
                       border: '1px solid',
                       borderColor: isSelected ? 'var(--pri)' : 'var(--line-strong)',

@@ -140,8 +140,8 @@ export default function Profile() {
           alignItems: 'center',
           flexWrap: 'wrap',
           gap: 20,
-          background: 'linear-gradient(135deg, #ffffff 0%, #fff1f2 100%)',
-          border: '1px solid #fecdd3',
+          background: 'linear-gradient(135deg, var(--card) 0%, var(--pri-subtle) 100%)',
+          border: '1px solid var(--line-strong)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>

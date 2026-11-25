@@ -327,13 +327,13 @@ export default function Progress() {
               alignItems: 'center',
               padding: '12px 14px',
               borderRadius: 12,
-              background: streak.freezeActive ? '#eff6ff' : 'var(--pri-subtle)',
+              background: streak.freezeActive ? 'rgba(59, 130, 246, 0.15)' : 'var(--pri-subtle)',
               border: '1px solid',
-              borderColor: streak.freezeActive ? '#bfdbfe' : 'var(--line)',
+              borderColor: streak.freezeActive ? 'rgba(59, 130, 246, 0.35)' : 'var(--line)',
             }}
           >
             <div>
-              <div style={{ fontWeight: 600, fontSize: '.9rem', color: streak.freezeActive ? '#1e40af' : 'var(--ink)' }}>
+              <div style={{ fontWeight: 600, fontSize: '.9rem', color: streak.freezeActive ? '#3b82f6' : 'var(--ink)' }}>
                 ❄️ Streak Freeze {streak.freezeActive ? '(Active)' : '(Available)'}
               </div>
               <div style={{ fontSize: '.78rem', color: 'var(--mut)' }}>

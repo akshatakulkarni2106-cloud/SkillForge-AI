@@ -5,6 +5,12 @@
   --line: #fce7f1;
   --line-strong: #fbcfe8;
   --card: #ffffff;
+  --card-light: #ffffff;
+  --card-light-border: #fbcfe8;
+  --text-on-light: #180a14;
+  --text-on-light-muted: #4a2436;
+  --text-on-dark: #fdf2f7;
+  --text-on-dark-muted: #c090aa;
   --pri: #e11d48;
   --pri-gradient: linear-gradient(135deg, #e11d48 0%, #db2777 100%);
   --pri-hover: #be123c;
@@ -704,6 +710,12 @@ button:focus-visible, a:focus-visible {
   --line: #fce7f1;
   --line-strong: #fbcfe8;
   --card: #ffffff;
+  --card-light: #ffffff;
+  --card-light-border: #fbcfe8;
+  --text-on-light: #180a14;
+  --text-on-light-muted: #4a2436;
+  --text-on-dark: #fdf2f7;
+  --text-on-dark-muted: #c090aa;
   --pri: #e11d48;
   --pri-gradient: linear-gradient(135deg, #e11d48 0%, #db2777 100%);
   --pri-hover: #be123c;
@@ -724,11 +736,41 @@ button:focus-visible, a:focus-visible {
   --line: #2e1028;
   --line-strong: #451b3d;
   --card: #180916;
+  --card-light: #ffffff;
+  --card-light-border: #e2e8f0;
+  --text-on-light: #180a14;
+  --text-on-light-muted: #4a2436;
+  --text-on-dark: #fdf2f7;
+  --text-on-dark-muted: #c090aa;
   --pri-subtle: #2d0e22;
   --side: #0a0309;
   --side-text: #fce7f1;
   --side-mut: #966b84;
   --side-hover: #1f0b1c;
+}
+
+/* Light Surface / Card Tokens */
+.card-light, .star-bullet-card {
+  background: var(--card-light, #ffffff) !important;
+  border: 1px solid var(--card-light-border, #fbcfe8) !important;
+  border-radius: 12px;
+  color: var(--text-on-light, #180a14) !important;
+}
+.card-light *, .star-bullet-card * {
+  color: var(--text-on-light, #180a14);
+}
+.card-light .muted, .star-bullet-card .muted {
+  color: var(--text-on-light-muted, #4a2436) !important;
+}
+.card-light .copy-btn, .star-bullet-card .copy-btn {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.card-light .copy-btn:hover, .star-bullet-card .copy-btn:hover {
+  background: #e2e8f0 !important;
+  border-color: var(--pri) !important;
+  color: var(--pri) !important;
 }
 [data-theme='dark'] input,
 [data-theme='dark'] select,

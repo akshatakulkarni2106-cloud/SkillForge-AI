@@ -349,7 +349,7 @@ export default function PracticePage() {
       {!sessionStarted ? (
         <div className="card" style={{ marginTop: 20 }}>
           {error && (
-            <div className="card" style={{ marginBottom: 16, borderColor: 'var(--warm)', background: '#fff4f0' }}>
+            <div className="card" style={{ marginBottom: 16, borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)' }}>
               <strong style={{ color: 'var(--warm)' }}>Error</strong>
               <p style={{ margin: '8px 0 0' }}>{error}</p>
               <div className="actions" style={{ marginTop: 12 }}>
@@ -401,7 +401,7 @@ export default function PracticePage() {
           </div>
 
           {error && (
-            <div className="card" style={{ marginTop: 16, borderColor: 'var(--warm)', background: '#fff4f0' }}>
+            <div className="card" style={{ marginTop: 16, borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)' }}>
               <strong style={{ color: 'var(--warm)' }}>Error</strong>
               <p style={{ margin: '8px 0 0' }}>{error}</p>
               <div className="actions" style={{ marginTop: 12 }}>
@@ -449,8 +449,9 @@ export default function PracticePage() {
                       type="button"
                       onClick={() => setSelectedOption(option)}
                       style={{
-                        background: selectedOption === option ? '#e3f1ee' : '#fff',
-                        borderColor: selectedOption === option ? '#0f766e' : '#e2e5df',
+                        background: selectedOption === option ? 'var(--pri)' : 'var(--card)',
+                        color: selectedOption === option ? '#fff' : 'var(--ink)',
+                        borderColor: selectedOption === option ? 'var(--pri)' : 'var(--line)',
                       }}
                     >
                       {option}

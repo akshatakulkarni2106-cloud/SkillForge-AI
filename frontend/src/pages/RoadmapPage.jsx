@@ -304,7 +304,7 @@ export default function RoadmapPage() {
         </div>
 
         {error && (
-          <div className="card" style={{ marginTop: 18, borderColor: 'var(--warm)', background: '#fff4f0' }}>
+          <div className="card" style={{ marginTop: 18, borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)' }}>
             <strong style={{ color: 'var(--warm)' }}>Error</strong>
             <p style={{ margin: '8px 0 0' }}>{error}</p>
           </div>
@@ -336,7 +336,7 @@ export default function RoadmapPage() {
                       padding: '14px 16px',
                       borderRadius: 10,
                       border: isSelected ? '2px solid var(--pri)' : '1px solid var(--line)',
-                      background: isSelected ? '#f0fdf4' : 'var(--card)',
+                      background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--card)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       gap: 16,
@@ -396,7 +396,7 @@ export default function RoadmapPage() {
                       padding: '14px 16px',
                       borderRadius: 10,
                       border: isSelected ? '2px solid var(--pri)' : '1px solid var(--line)',
-                      background: isSelected ? '#f0fdf4' : 'var(--card)',
+                      background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--card)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       gap: 16,
@@ -412,7 +412,7 @@ export default function RoadmapPage() {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <b style={{ fontSize: '1rem' }}>{skill}</b>
-                          <span className="tag" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+                          <span className="tag" style={{ background: 'rgba(14, 165, 233, 0.18)', color: '#0284c7', borderColor: 'rgba(14, 165, 233, 0.35)' }}>
                             Custom
                           </span>
                         </div>
@@ -485,7 +485,7 @@ export default function RoadmapPage() {
                     style={{
                       cursor: 'pointer',
                       border: isSelected ? '1px solid var(--pri)' : '1px solid var(--line)',
-                      background: isSelected ? 'var(--pri)' : '#f4f5f2',
+                      background: isSelected ? 'var(--pri)' : 'var(--card)',
                       color: isSelected ? '#fff' : 'var(--ink)',
                       userSelect: 'none',
                     }}
@@ -500,7 +500,7 @@ export default function RoadmapPage() {
         )}
 
         {selectedSkills.length === 0 && (
-          <div className="card" style={{ marginTop: 18, borderColor: 'var(--warm)', background: '#fff7ee' }}>
+          <div className="card" style={{ marginTop: 18, borderColor: 'rgba(245, 158, 11, 0.35)', background: 'rgba(245, 158, 11, 0.12)' }}>
             <strong style={{ color: 'var(--warm)' }}>Selection required</strong>
             <p className="muted" style={{ margin: '6px 0 0' }}>
               Please select at least one skill to generate your learning roadmap.
@@ -572,7 +572,7 @@ export default function RoadmapPage() {
       </div>
 
       {dataChanged && (
-        <div className="card" style={{ marginTop: 18, borderColor: 'var(--warm)', background: '#fff7ee' }}>
+        <div className="card" style={{ marginTop: 18, borderColor: 'rgba(245, 158, 11, 0.35)', background: 'rgba(245, 158, 11, 0.12)' }}>
           <strong style={{ color: 'var(--warm)' }}>
             Your skill data has changed since this roadmap was generated — regenerate for an updated plan?
           </strong>
@@ -585,7 +585,7 @@ export default function RoadmapPage() {
       )}
 
       {error && (
-        <div className="card" style={{ marginTop: 18, borderColor: 'var(--warm)', background: '#fff4f0' }}>
+        <div className="card" style={{ marginTop: 18, borderColor: 'rgba(239, 68, 68, 0.35)', background: 'rgba(239, 68, 68, 0.12)' }}>
           <strong style={{ color: 'var(--warm)' }}>Error</strong>
           <p style={{ margin: '8px 0 0' }}>{error}</p>
         </div>

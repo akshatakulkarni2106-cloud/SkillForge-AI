@@ -226,7 +226,7 @@ export default function LandingPage() {
                 fontWeight: 600,
                 fontSize: '.92rem',
                 border: activeTab === tab.id ? 'none' : '1px solid var(--line-strong)',
-                background: activeTab === tab.id ? 'var(--pri-gradient)' : '#fff',
+                background: activeTab === tab.id ? 'var(--pri-gradient)' : 'var(--card)',
                 color: activeTab === tab.id ? '#fff' : 'var(--ink)',
                 boxShadow: activeTab === tab.id ? '0 4px 14px rgba(225, 29, 72, 0.3)' : 'none',
                 transition: 'all .2s ease',
